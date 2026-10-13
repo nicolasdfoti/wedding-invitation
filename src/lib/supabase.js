@@ -3,6 +3,10 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Faltan variables de entorno: VITE_SUPABASE_URL y/o VITE_SUPABASE_ANON_KEY');
+}
+
 export const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
@@ -14,30 +18,18 @@ export async function submitRSVP(data) {
     return { success: true, data: { id: 'mock-' + Date.now() } };
   }
 
-  const { data: result, error } = await supabase
-    .from('rsvps')
+  const { error } = await supabase
+    .from('rsvp')
     .insert([
       {
-        name: data.name,
-        attendance: data.attendance,
-        message: data.message || null,
-        created_at: new Date().toISOString(),
+        nombre: data.nombre,
+        cantidad_personas: data.cantidadPersonas,
+        asistencia: data.asistencia,
+        restricciones: data.restricciones || null,
+        mensaje: data.mensaje || null,
       },
-    ])
-    .select()
-    .single();
+    ]);
 
   if (error) throw error;
-  return { success: true, data: result };
-}
-
-export async function getRSVPs() {
-  if (!supabase) return { data: [], error: null };
-
-  const { data, error } = await supabase
-    .from('rsvps')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  return { data, error };
+  return { success: true };
 }

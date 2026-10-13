@@ -29,7 +29,7 @@ export default function Hero() {
             className="uppercase tracking-[0.4em] text-sm mb-6 text-accent font-semibold"
             aria-hidden="true"
           >
-            {site.couple.names.split('&')[0].trim()} & {site.couple.names.split('&')[1].trim()} · Boda
+            {site.couple.names.split('&')[0].trim()} & {site.couple.names.split('&')[1].trim()} · Nuestra boda
           </p>
 
           <h1

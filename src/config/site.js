@@ -20,21 +20,21 @@ export const site = {
       time: '09:15',
       location: 'Sarmiento 373, Pilar, Buenos Aires',
       address: 'Sarmiento 373, Pilar, Buenos Aires, Argentina',
-      mapsUrl: 'https://maps.app.goo.gl/example-civil',
+      mapsUrl: 'https://maps.app.goo.gl/t9JijJA69yS8kKxr8',
     },
     reception: {
       label: 'Recepción',
       time: '10:30',
       location: 'Sarmiento 373, Pilar, Buenos Aires',
       address: 'Sarmiento 373, Pilar, Buenos Aires, Argentina',
-      mapsUrl: 'https://maps.app.goo.gl/example-reception',
+      mapsUrl: 'https://maps.app.goo.gl/mGJ9DRURN7jrYYcT9',
     },
     sealing: {
       label: 'Sellamiento',
       time: '17:30',
       location: 'Templo de Buenos Aires',
       address: 'Templo de Buenos Aires, Argentina',
-      mapsUrl: 'https://maps.app.goo.gl/example-sealing',
+      mapsUrl: 'https://maps.app.goo.gl/XovpHrcqFNycHw6C9',
     },
   },
 
@@ -42,29 +42,29 @@ export const site = {
     title: 'Dónde',
     address: 'Sarmiento 373 · Pilar · Buenos Aires',
     fullAddress: 'Sarmiento 373, Pilar, Buenos Aires, Argentina',
-    mapsUrl: 'https://maps.app.goo.gl/example-main',
+    mapsUrl: 'https://maps.app.goo.gl/mGJ9DRURN7jrYYcT9',
     coordinates: { lat: -34.4667, lng: -58.9167 },
   },
 
   story: {
     title: 'Nuestra Historia',
     paragraphs: [
-      'Todo comenzó una tarde de primavera en la universidad, cuando nuestros caminos se cruzaron en la biblioteca. Lo que empezó como una charla sobre apuntes de clase se convirtió en horas de conversación que no queríamos que terminaran.',
-      'A través de los años, hemos compartido sueños, desafíos y incontables mateadas. Cada paso nos confirmó que queríamos caminar juntos el resto de nuestras vidas.',
-      'Hoy, con el corazón lleno de alegría, los invitamos a ser testigos de nuestra promesa de amor eterno.',
+      'Sofy y Nico se conocen desde hace mucho tiempo. Se conocieron en Instituto, y desde ahí, nunca más se separaron.',
+      'Nico esperó a Sofy durante su misión, y juntos, empezaron el sueño de casarse y formar su propia familia',
+      'Hoy, ese sueño está cada vez más cerca...'
     ],
-    photoUrl: '/assets/hero.png',
+    photoUrl: '/assets/templo-1.jpg',
   },
 
   gallery: {
     title: 'Galería',
     photos: [
-      { src: '/assets/hero.png', alt: 'Sofy y Nico juntos', caption: 'Nuestra foto favorita' },
-      { src: '/assets/hero.png', alt: 'Pareja en la playa', caption: 'Vacaciones 2024' },
-      { src: '/assets/hero.png', alt: 'Momento especial', caption: 'Compromiso' },
-      { src: '/assets/hero.png', alt: 'Familia', caption: 'Con la familia' },
-      { src: '/assets/hero.png', alt: 'Amigos', caption: 'Con amigos' },
-      { src: '/assets/hero.png', alt: 'Mascota', caption: 'Nuestra mascota' },
+      { src: '/assets/story.jpeg', alt: 'Sofy y Nico juntos', caption: 'Nuestra foto favorita' },
+      { src: '/assets/Conferencia.jpeg', alt: 'Domingos compartidos', caption: 'Domingos compartidos' },
+      { src: '/assets/compromiso.jpg', alt: 'Momento especial', caption: 'Compromiso' },
+      { src: '/assets/templo-1.jpg', alt: 'Templo', caption: 'Templo juntos' },
+      { src: '/assets/plaza.jpeg', alt: 'Plaza', caption: 'Sonriendo juntos' },
+      { src: '/assets/Río.jpeg', alt: 'Río', caption: 'Nuestro lugar en el mundo' },
     ],
   },
 
@@ -83,8 +83,8 @@ export const site = {
     title: 'Lista de Regalos',
     description: 'Su presencia es el mejor regalo, pero si desean obsequiarnos algo:',
     accounts: [
-      { bank: 'Banco Galicia', alias: 'SOFY.NICO.BODA', cbu: '0070000000000000000000' },
-      { bank: 'Mercado Pago', alias: 'sofy.nico.boda', cvu: '0000000000000000000000' },
+      { bank: 'Banco BBVA', alias: 'nicolasfoti', cbu: '0170039840000034645646' },
+      { bank: 'Mercado Pago', alias: 'nicolasdfoti', cvu: '0000003100035561508263' },
     ],
     url: 'https://example.com/gift-list',
   },
@@ -94,11 +94,13 @@ export const site = {
     subtitle: 'Por favor confirmá antes del 1 de enero de 2027',
     form: {
       namePlaceholder: 'Nombre y apellido',
+      cantidadPersonasPlaceholder: 'Cantidad de personas',
       attendanceOptions: [
-        { value: 'yes', label: '¡Nos vemos ahí!' },
-        { value: 'no', label: 'No podré asistir...' },
+        { value: 'true', label: '¡Nos vemos ahí!' },
+        { value: 'false', label: 'No podré asistir...' },
       ],
-      messagePlaceholder: 'Mensaje o restricción alimentaria (opcional)',
+      restriccionesPlaceholder: 'Restricciones alimentarias (opcional)',
+      messagePlaceholder: 'Mensaje (opcional)',
       submitText: 'Enviar confirmación',
     },
     successMessage: '¡Gracias por confirmar! Te esperamos.',

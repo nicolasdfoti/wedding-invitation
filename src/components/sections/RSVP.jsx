@@ -12,12 +12,14 @@ import site from '../../config/site';
 export default function RSVP() {
   const { ref, isVisible } = useScrollReveal({ triggerOnce: true });
   const [formData, setFormData] = useState({
-    name: '',
-    attendance: '',
-    message: '',
+    nombre: '',
+    cantidadPersonas: '',
+    asistencia: '',
+    restricciones: '',
+    mensaje: '',
   });
   const [errors, setErrors] = useState({});
-  const [status, setStatus] = useState('idle'); // idle, submitting, success, error
+  const [status, setStatus] = useState('idle');
   const [submitError, setSubmitError] = useState('');
 
   const handleChange = (e) => {
@@ -42,12 +44,14 @@ export default function RSVP() {
 
     try {
       await submitRSVP({
-        name: formData.name.trim(),
-        attendance: formData.attendance,
-        message: formData.message.trim(),
+        nombre: formData.nombre.trim(),
+        cantidadPersonas: Number(formData.cantidadPersonas),
+        asistencia: formData.asistencia === 'true',
+        restricciones: formData.restricciones.trim(),
+        mensaje: formData.mensaje.trim(),
       });
       setStatus('success');
-      setFormData({ name: '', attendance: '', message: '' });
+      setFormData({ nombre: '', cantidadPersonas: '', asistencia: '', restricciones: '', mensaje: '' });
     } catch (error) {
       setStatus('error');
       setSubmitError(site.rsvp.errorMessage);
@@ -105,49 +109,79 @@ export default function RSVP() {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6" noValidate>
                 <div>
-                  <label htmlFor="name" className="sr-only">
+                  <label htmlFor="nombre" className="sr-only">
                     Nombre y apellido
                   </label>
                   <input
                     type="text"
-                    id="name"
-                    name="name"
+                    id="nombre"
+                    name="nombre"
                     placeholder={site.rsvp.form.namePlaceholder}
-                    value={formData.name}
+                    value={formData.nombre}
                     onChange={handleChange}
                     className={`w-full p-4 rounded-2xl border ${
-                      errors.name?.length
+                      errors.nombre?.length
                         ? 'border-red-300 focus:border-red-400'
                         : 'border-gray-200 focus:border-accent'
                     } outline-none transition-colors`}
-                    aria-invalid={errors.name?.length > 0}
-                    aria-describedby={errors.name?.length ? 'name-error' : undefined}
+                    aria-invalid={errors.nombre?.length > 0}
+                    aria-describedby={errors.nombre?.length ? 'nombre-error' : undefined}
                     disabled={status === 'submitting'}
                     autoComplete="name"
                   />
-                  {errors.name?.length && (
-                    <p id="name-error" className="mt-1 text-sm text-red-600" role="alert">
-                      {errors.name[0]}
+                  {errors.nombre?.length > 0 && (
+                    <p id="nombre-error" className="mt-1 text-sm text-red-600" role="alert">
+                      {errors.nombre[0]}
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <label htmlFor="attendance" className="sr-only">
+                  <label htmlFor="cantidadPersonas" className="sr-only">
+                    Cantidad de personas
+                  </label>
+                  <input
+                    type="number"
+                    id="cantidadPersonas"
+                    name="cantidadPersonas"
+                    placeholder={site.rsvp.form.cantidadPersonasPlaceholder}
+                    value={formData.cantidadPersonas}
+                    onChange={handleChange}
+                    min="1"
+                    max="20"
+                    className={`w-full p-4 rounded-2xl border ${
+                      errors.cantidadPersonas?.length
+                        ? 'border-red-300 focus:border-red-400'
+                        : 'border-gray-200 focus:border-accent'
+                    } outline-none transition-colors`}
+                    aria-invalid={errors.cantidadPersonas?.length > 0}
+                    aria-describedby={errors.cantidadPersonas?.length ? 'cantidadPersonas-error' : undefined}
+                    disabled={status === 'submitting'}
+                    autoComplete="off"
+                  />
+                  {errors.cantidadPersonas?.length > 0 && (
+                    <p id="cantidadPersonas-error" className="mt-1 text-sm text-red-600" role="alert">
+                      {errors.cantidadPersonas[0]}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="asistencia" className="sr-only">
                     Asistencia
                   </label>
                   <select
-                    id="attendance"
-                    name="attendance"
-                    value={formData.attendance}
+                    id="asistencia"
+                    name="asistencia"
+                    value={formData.asistencia}
                     onChange={handleChange}
                     className={`w-full p-4 rounded-2xl border ${
-                      errors.attendance?.length
+                      errors.asistencia?.length
                         ? 'border-red-300 focus:border-red-400'
                         : 'border-gray-200 focus:border-accent'
                     } outline-none transition-colors appearance-none bg-white`}
-                    aria-invalid={errors.attendance?.length > 0}
-                    aria-describedby={errors.attendance?.length ? 'attendance-error' : undefined}
+                    aria-invalid={errors.asistencia?.length > 0}
+                    aria-describedby={errors.asistencia?.length ? 'asistencia-error' : undefined}
                     disabled={status === 'submitting'}
                   >
                     <option value="">Seleccionar...</option>
@@ -157,36 +191,63 @@ export default function RSVP() {
                       </option>
                     ))}
                   </select>
-                  {errors.attendance?.length && (
-                    <p id="attendance-error" className="mt-1 text-sm text-red-600" role="alert">
-                      {errors.attendance[0]}
+                  {errors.asistencia?.length > 0 && (
+                    <p id="asistencia-error" className="mt-1 text-sm text-red-600" role="alert">
+                      {errors.asistencia[0]}
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <label htmlFor="message" className="sr-only">
-                    Mensaje
+                  <label htmlFor="restricciones" className="sr-only">
+                    Restricciones alimentarias
                   </label>
                   <textarea
-                    id="message"
-                    name="message"
-                    rows={4}
-                    placeholder={site.rsvp.form.messagePlaceholder}
-                    value={formData.message}
+                    id="restricciones"
+                    name="restricciones"
+                    rows={3}
+                    placeholder={site.rsvp.form.restriccionesPlaceholder}
+                    value={formData.restricciones}
                     onChange={handleChange}
                     className={`w-full p-4 rounded-2xl border ${
-                      errors.message?.length
+                      errors.restricciones?.length
                         ? 'border-red-300 focus:border-red-400'
                         : 'border-gray-200 focus:border-accent'
                     } outline-none transition-colors resize-none`}
-                    aria-invalid={errors.message?.length > 0}
-                    aria-describedby={errors.message?.length ? 'message-error' : undefined}
+                    aria-invalid={errors.restricciones?.length > 0}
+                    aria-describedby={errors.restricciones?.length ? 'restricciones-error' : undefined}
                     disabled={status === 'submitting'}
                   />
-                  {errors.message?.length && (
-                    <p id="message-error" className="mt-1 text-sm text-red-600" role="alert">
-                      {errors.message[0]}
+                  {errors.restricciones?.length > 0 && (
+                    <p id="restricciones-error" className="mt-1 text-sm text-red-600" role="alert">
+                      {errors.restricciones[0]}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="mensaje" className="sr-only">
+                    Mensaje
+                  </label>
+                  <textarea
+                    id="mensaje"
+                    name="mensaje"
+                    rows={4}
+                    placeholder={site.rsvp.form.messagePlaceholder}
+                    value={formData.mensaje}
+                    onChange={handleChange}
+                    className={`w-full p-4 rounded-2xl border ${
+                      errors.mensaje?.length
+                        ? 'border-red-300 focus:border-red-400'
+                        : 'border-gray-200 focus:border-accent'
+                    } outline-none transition-colors resize-none`}
+                    aria-invalid={errors.mensaje?.length > 0}
+                    aria-describedby={errors.mensaje?.length ? 'mensaje-error' : undefined}
+                    disabled={status === 'submitting'}
+                  />
+                  {errors.mensaje?.length > 0 && (
+                    <p id="mensaje-error" className="mt-1 text-sm text-red-600" role="alert">
+                      {errors.mensaje[0]}
                     </p>
                   )}
                 </div>

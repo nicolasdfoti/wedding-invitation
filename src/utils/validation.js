@@ -28,7 +28,7 @@ export function validateName(name) {
 }
 
 export function validateAttendance(attendance) {
-  const validOptions = ['yes', 'no'];
+  const validOptions = ['true', 'false'];
   if (!validateRequired(attendance)) {
     return ['Debes seleccionar una opción'];
   }
@@ -46,11 +46,38 @@ export function validateMessage(message) {
   return errors;
 }
 
+export function validateCantidadPersonas(cantidad) {
+  const errors = [];
+  if (!validateRequired(cantidad)) {
+    errors.push('La cantidad de personas es obligatoria');
+  } else {
+    const num = Number(cantidad);
+    if (isNaN(num) || !Number.isInteger(num)) {
+      errors.push('La cantidad debe ser un número entero');
+    } else if (num < 1) {
+      errors.push('Debe haber al menos 1 persona');
+    } else if (num > 20) {
+      errors.push('La cantidad máxima es 20 personas');
+    }
+  }
+  return errors;
+}
+
+export function validateRestricciones(restricciones) {
+  const errors = [];
+  if (restricciones && !validateMaxLength(restricciones, 500)) {
+    errors.push('Las restricciones no pueden exceder 500 caracteres');
+  }
+  return errors;
+}
+
 export function validateRSVPForm(formData) {
   const errors = {
-    name: validateName(formData.name),
-    attendance: validateAttendance(formData.attendance),
-    message: validateMessage(formData.message),
+    nombre: validateName(formData.nombre),
+    cantidadPersonas: validateCantidadPersonas(formData.cantidadPersonas),
+    asistencia: validateAttendance(formData.asistencia),
+    restricciones: validateRestricciones(formData.restricciones),
+    mensaje: validateMessage(formData.mensaje),
   };
 
   const hasErrors = Object.values(errors).some(arr => arr.length > 0);
