@@ -8,10 +8,10 @@ export const site = {
   },
 
   wedding: {
-    date: '2027-02-19',
-    time: '17:00',
+    date: '2027-02-12',
+    time: '09:00',
     timezone: 'America/Argentina/Buenos_Aires',
-    isoString: '2027-02-19T17:00:00-03:00',
+    isoString: '2027-02-12T08:00:00-03:00',
   },
 
   events: {
@@ -86,7 +86,7 @@ export const site = {
       { bank: 'Banco BBVA', alias: 'nicolasfoti', cbu: '0170039840000034645646' },
       { bank: 'Mercado Pago', alias: 'nicolasdfoti', cvu: '0000003100035561508263' },
     ],
-    url: 'https://example.com/gift-list',
+    url: 'https://docs.google.com/spreadsheets/d/1W6zMDF4_RY91wbJqeuTRuJjl34cl6uly7o_jBrrLIqI/edit?usp=drive_web&ouid=101677422371794383247',
   },
 
   rsvp: {
@@ -111,13 +111,13 @@ export const site = {
     title: 'Sofy & Nico - Nuestra Boda',
     description: 'Invitación de boda de Sofy y Nico. 19 de febrero de 2027, Pilar, Buenos Aires.',
     ogImage: '/assets/hero.png',
-    url: 'https://sofyynico.com',
-    twitterHandle: '@sofyynico',
+    url: 'https://wedding-invitation-inky-kappa-17.vercel.app/',
+    twitterHandle: '@nicolasdfoti',
   },
 
   contact: {
-    email: 'boda@sofyynico.com',
-    phone: '+54 9 11 1234-5678',
+    email: 'nicolasdfoti@gmail.com',
+    phone: '+54 9 11 5387-3620',
   },
 };
 
