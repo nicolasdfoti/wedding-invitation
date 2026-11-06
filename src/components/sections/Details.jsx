@@ -13,7 +13,7 @@ const eventItems = [
     time: site.events.civil.time,
     location: site.events.civil.location,
     mapsUrl: site.events.civil.mapsUrl,
-    description: 'Ceremonia civil oficial',
+    description: '',
   },
   {
     icon: Clock,
@@ -21,7 +21,7 @@ const eventItems = [
     time: site.events.reception.time,
     location: site.events.reception.location,
     mapsUrl: site.events.reception.mapsUrl,
-    description: 'Cóctel y recepción',
+    description: 'Recepción',
   },
   {
     icon: MapPin,
@@ -29,7 +29,7 @@ const eventItems = [
     time: site.events.sealing.time,
     location: site.events.sealing.location,
     mapsUrl: site.events.sealing.mapsUrl,
-    description: 'Sellamiento eterno',
+    description: 'Opcional',
   },
 ];
 

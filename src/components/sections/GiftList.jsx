@@ -41,11 +41,26 @@ export default function GiftList() {
         >
           <Card variant="elevated" padding="xl" className="text-center">
             <Gift className="mx-auto text-gold mb-4" size={48} aria-hidden="true" />
-            <h3 className="font-title text-3xl text-blue mb-3">{site.giftList.description}</h3>
-            <p className="text-gray-600 max-w-xl mx-auto">
-              Su presencia es el mejor regalo, pero si desean obsequiarnos algo, aquí tienen nuestras opciones:
-            </p>
+            <h3 className="font-title text-2xl text-gray mb-3">{site.giftList.description}</h3>
           </Card>
+
+          {site.giftList.url && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: isVisible ? 0.5 : 0, duration: 0.4 }}
+              className="text-center"
+            >
+              <Button
+                variant="secondary"
+                size="lg"
+                onClick={() => window.open(site.giftList.url, '_blank', 'noopener,noreferrer')}
+              >
+                <ExternalLink className="w-5 h-5 mr-2" aria-hidden="true" />
+                Ver lista completa de regalos
+              </Button>
+            </motion.div>
+          )}
 
           <div className="grid md:grid-cols-2 gap-6">
             {site.giftList.accounts.map((account, index) => (
@@ -129,24 +144,6 @@ export default function GiftList() {
               </motion.article>
             ))}
           </div>
-
-          {site.giftList.url && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: isVisible ? 0.5 : 0, duration: 0.4 }}
-              className="text-center"
-            >
-              <Button
-                variant="secondary"
-                size="lg"
-                onClick={() => window.open(site.giftList.url, '_blank', 'noopener,noreferrer')}
-              >
-                <ExternalLink className="w-5 h-5 mr-2" aria-hidden="true" />
-                Ver lista completa de regalos
-              </Button>
-            </motion.div>
-          )}
         </motion.div>
       </Container>
     </section>

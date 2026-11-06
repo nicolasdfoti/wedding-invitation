@@ -17,21 +17,21 @@ export const site = {
   events: {
     civil: {
       label: 'Ceremonia Civil',
-      time: '09:15',
-      location: 'Sarmiento 373, Pilar, Buenos Aires',
-      address: 'Sarmiento 373, Pilar, Buenos Aires, Argentina',
+      time: '09:40',
+      location: 'Amilcar Lubo 530, Pilar, Buenos Aires',
+      address: 'Amilcar Lubo 530, Pilar, Buenos Aires, Argentina',
       mapsUrl: 'https://maps.app.goo.gl/t9JijJA69yS8kKxr8',
     },
     reception: {
       label: 'Recepción',
-      time: '10:30',
+      time: '11:00',
       location: 'Sarmiento 373, Pilar, Buenos Aires',
       address: 'Sarmiento 373, Pilar, Buenos Aires, Argentina',
       mapsUrl: 'https://maps.app.goo.gl/mGJ9DRURN7jrYYcT9',
     },
     sealing: {
       label: 'Sellamiento',
-      time: '17:30',
+      time: '20:00',
       location: 'Templo de Buenos Aires',
       address: 'Templo de Buenos Aires, Argentina',
       mapsUrl: 'https://maps.app.goo.gl/XovpHrcqFNycHw6C9',
@@ -70,12 +70,11 @@ export const site = {
 
   dressCode: {
     title: 'Código de Vestimenta',
-    description: 'Elegante / Semi-formal',
+    description: 'Formal',
     details: [
-      'Se sugiere traje oscuro o vestido de cóctel',
-      'Colores recomendados: tonos tierra, azul marino, verde oliva, champán',
-      'Evitar blanco, negro total y colores neón',
-      'Calzado cómodo para disfrutar toda la noche',
+      'Elegancia y color para celebrar juntos',
+      'Colores: ¡Queremos una celebración llena de color!',
+      'Vestimenta: Trajes y vestidos elegantes',
     ],
   },
 

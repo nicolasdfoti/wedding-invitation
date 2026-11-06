@@ -39,7 +39,7 @@ export default function DressCode() {
             <div className="grid sm:grid-cols-2 gap-4 text-left">
               {site.dressCode.details.slice(1).map((detail, index) => (
                 <motion.div
-                  key={detail}
+                  key={index}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: isVisible ? 0.4 + index * 0.1 : 0, duration: 0.4 }}

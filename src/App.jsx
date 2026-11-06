@@ -32,7 +32,6 @@ export default function App() {
           <Countdown />
           <Story />
           <Details />
-          <Location />
           <DressCode />
           <GiftList />
           <Gallery />
