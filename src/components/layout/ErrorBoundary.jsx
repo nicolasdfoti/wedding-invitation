@@ -16,7 +16,7 @@ class ErrorBoundary extends Component {
   }
 
   handleRetry = () => {
-    this.setState({ hasError: false, error: null, errorInfo: null });
+    window.location.reload();
   };
 
   render() {
@@ -41,10 +41,10 @@ class ErrorBoundary extends Component {
               </svg>
               <h1 className="font-title text-4xl text-blue mb-4">Algo salió mal</h1>
               <p className="text-gray-600 mb-8 max-w-md mx-auto">
-                Lo sentimos, ha ocurrido un error inesperado. Nuestro equipo ha sido notificado.
+                Lo sentimos, ocurrió un error inesperado. Probá recargar la página.
               </p>
               <Button onClick={this.handleRetry} variant="primary" size="lg">
-                Reintentar
+                Recargar
               </Button>
               {import.meta.env.DEV && this.state.error && (
                 <details className="mt-8 text-left text-sm text-gray-500">

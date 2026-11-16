@@ -1,85 +1,76 @@
-import { Calendar, Clock, MapPin } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { useScrollReveal } from '../../hooks/useScrollReveal';
+import { Calendar, CalendarPlus, Clock, MapPin } from 'lucide-react';
+import { m } from 'framer-motion';
+import { fadeUp, revealViewport } from '../../lib/motion';
+import { downloadICS } from '../../utils/date';
 import Container from '../ui/Container';
 import SectionTitle from '../ui/SectionTitle';
 import Card from '../ui/Card';
+import Button from '../ui/Button';
 import site from '../../config/site';
 
 const eventItems = [
-  {
-    icon: Calendar,
-    title: site.events.civil.label,
-    time: site.events.civil.time,
-    location: site.events.civil.location,
-    mapsUrl: site.events.civil.mapsUrl,
-    description: '',
-  },
-  {
-    icon: Clock,
-    title: site.events.reception.label,
-    time: site.events.reception.time,
-    location: site.events.reception.location,
-    mapsUrl: site.events.reception.mapsUrl,
-    description: 'Recepción',
-  },
-  {
-    icon: MapPin,
-    title: site.events.sealing.label,
-    time: site.events.sealing.time,
-    location: site.events.sealing.location,
-    mapsUrl: site.events.sealing.mapsUrl,
-    description: 'Opcional',
-  },
-];
+  { key: 'civil', icon: Calendar, description: '' },
+  { key: 'reception', icon: Clock, description: '' },
+  { key: 'sealing', icon: MapPin, description: 'Opcional' },
+].map(({ key, ...rest }) => ({ key, ...site.events[key], ...rest }));
+
+// Convierte "HH:MM" del día de la boda en una fecha con la zona horaria de Argentina.
+function eventStart(time) {
+  const offset = site.wedding.isoString.slice(-6); // ej: "-03:00"
+  return new Date(`${site.wedding.date}T${time}:00${offset}`);
+}
+
+function handleAddToCalendar() {
+  const events = eventItems.map((event) => {
+    const start = eventStart(event.time);
+    const end = new Date(start.getTime() + (event.durationMinutes ?? 60) * 60 * 1000);
+    return {
+      uid: `${site.wedding.date}-${event.key}@sofyynico`,
+      title: `${event.label} · Boda ${site.couple.names}`,
+      description: `${event.label} de la boda de ${site.couple.names}.\n${site.seo.url}`,
+      location: event.address,
+      startDate: start,
+      endDate: end,
+    };
+  });
+  downloadICS(events);
+}
 
 export default function Details() {
-  const { ref, isVisible } = useScrollReveal({ triggerOnce: true });
-
   return (
-    <section
-      ref={ref}
-      className="section"
-      aria-labelledby="details-title"
-    >
+    <section className="section" aria-labelledby="details-title">
       <Container size="lg">
-        <SectionTitle
-          id="details-title"
-          subtitle="Detalles del evento"
-          dividerColor="accent"
-        >
+        <SectionTitle id="details-title" subtitle="Detalles del evento" dividerColor="accent">
           Cuándo y Dónde
         </SectionTitle>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: isVisible ? 0.2 : 0, duration: 0.6 }}
-          className="grid md:grid-cols-3 gap-8"
-        >
+        <m.div {...fadeUp} transition={{ delay: 0.2, duration: 0.6 }} className="grid md:grid-cols-3 gap-8">
           {eventItems.map((item, index) => {
             const Icon = item.icon;
             return (
-              <motion.article
-                key={item.title}
+              <m.article
+                key={item.key}
                 initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: isVisible ? 0.3 + index * 0.1 : 0, duration: 0.4 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={revealViewport}
+                transition={{ delay: 0.3 + index * 0.1, duration: 0.4 }}
               >
                 <Card variant="outlined" padding="lg" className="h-full">
                   <div className="text-center">
                     <Icon className="mx-auto text-accent mb-4" size={42} aria-hidden="true" />
-                    <h3 className="font-title text-2xl text-blue mb-2">{item.title}</h3>
-                    <p className="text-accent font-semibold mb-1">{item.time}</p>
+                    <h3 className="font-title text-2xl text-blue mb-2">{item.label}</h3>
+                    <p className="text-accent font-semibold mb-1">{item.time} hs</p>
                     <p className="text-gray-600 mb-2">{item.location}</p>
-                    <p className="text-sm text-gray-500 italic mb-4">{item.description}</p>
+                    {item.description && (
+                      <p className="text-sm text-gray-500 italic mb-4">{item.description}</p>
+                    )}
                     {item.mapsUrl && (
                       <a
                         href={item.mapsUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center text-sm text-accent hover:text-coral transition-colors"
-                        aria-label={`Ver ${item.title} en Google Maps`}
+                        className="inline-flex items-center text-sm text-accent hover:text-coral transition-colors mt-2"
+                        aria-label={`Ver ${item.label} en Google Maps`}
                       >
                         <MapPin className="w-4 h-4 mr-1" aria-hidden="true" />
                         Ver en mapa
@@ -87,10 +78,17 @@ export default function Details() {
                     )}
                   </div>
                 </Card>
-              </motion.article>
+              </m.article>
             );
           })}
-        </motion.div>
+        </m.div>
+
+        <m.div {...fadeUp} transition={{ delay: 0.4, duration: 0.5 }} className="mt-10 text-center">
+          <Button variant="secondary" size="md" onClick={handleAddToCalendar}>
+            <CalendarPlus className="w-4 h-4 mr-2" aria-hidden="true" />
+            Agregar al calendario
+          </Button>
+        </m.div>
       </Container>
     </section>
   );

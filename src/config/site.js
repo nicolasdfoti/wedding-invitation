@@ -9,9 +9,10 @@ export const site = {
 
   wedding: {
     date: '2027-02-12',
-    time: '09:00',
+    // La cuenta regresiva apunta al primer evento (Ceremonia Civil).
+    time: '09:40',
     timezone: 'America/Argentina/Buenos_Aires',
-    isoString: '2027-02-12T08:00:00-03:00',
+    isoString: '2027-02-12T09:40:00-03:00',
   },
 
   events: {
@@ -21,6 +22,7 @@ export const site = {
       location: 'Amilcar Lubo 530, Pilar, Buenos Aires',
       address: 'Amilcar Lubo 530, Pilar, Buenos Aires, Argentina',
       mapsUrl: 'https://maps.app.goo.gl/t9JijJA69yS8kKxr8',
+      durationMinutes: 60,
     },
     reception: {
       label: 'Recepción',
@@ -28,6 +30,7 @@ export const site = {
       location: 'Sarmiento 373, Pilar, Buenos Aires',
       address: 'Sarmiento 373, Pilar, Buenos Aires, Argentina',
       mapsUrl: 'https://maps.app.goo.gl/mGJ9DRURN7jrYYcT9',
+      durationMinutes: 240,
     },
     sealing: {
       label: 'Sellamiento',
@@ -35,15 +38,8 @@ export const site = {
       location: 'Templo de Buenos Aires',
       address: 'Templo de Buenos Aires, Argentina',
       mapsUrl: 'https://maps.app.goo.gl/XovpHrcqFNycHw6C9',
+      durationMinutes: 60,
     },
-  },
-
-  location: {
-    title: 'Dónde',
-    address: 'Sarmiento 373 · Pilar · Buenos Aires',
-    fullAddress: 'Sarmiento 373, Pilar, Buenos Aires, Argentina',
-    mapsUrl: 'https://maps.app.goo.gl/mGJ9DRURN7jrYYcT9',
-    coordinates: { lat: -34.4667, lng: -58.9167 },
   },
 
   story: {
@@ -53,18 +49,18 @@ export const site = {
       'Nico esperó a Sofy durante su misión, y juntos, empezaron el sueño de casarse y formar su propia familia',
       'Hoy, ese sueño está cada vez más cerca...'
     ],
-    photoUrl: '/assets/templo-1.jpg',
+    photoUrl: '/assets/templo.webp',
   },
 
   gallery: {
     title: 'Galería',
     photos: [
-      { src: '/assets/story.jpeg', alt: 'Sofy y Nico juntos', caption: 'Nuestra foto favorita' },
-      { src: '/assets/Conferencia.jpeg', alt: 'Domingos compartidos', caption: 'Domingos compartidos' },
-      { src: '/assets/compromiso.jpg', alt: 'Momento especial', caption: 'Compromiso' },
-      { src: '/assets/templo-1.jpg', alt: 'Templo', caption: 'Templo juntos' },
-      { src: '/assets/plaza.jpeg', alt: 'Plaza', caption: 'Sonriendo juntos' },
-      { src: '/assets/Río.jpeg', alt: 'Río', caption: 'Nuestro lugar en el mundo' },
+      { src: '/assets/story.webp', alt: 'Sofy y Nico juntos', caption: 'Nuestra foto favorita' },
+      { src: '/assets/conferencia.webp', alt: 'Domingos compartidos', caption: 'Domingos compartidos' },
+      { src: '/assets/compromiso.webp', alt: 'Momento especial', caption: 'Compromiso' },
+      { src: '/assets/templo.webp', alt: 'Templo', caption: 'Templo juntos' },
+      { src: '/assets/plaza.webp', alt: 'Plaza', caption: 'Sonriendo juntos' },
+      { src: '/assets/rio.webp', alt: 'Río', caption: 'Nuestro lugar en el mundo' },
     ],
   },
 
@@ -91,6 +87,8 @@ export const site = {
   rsvp: {
     title: 'Confirmar Asistencia',
     subtitle: 'Por favor confirmá antes del 1 de enero de 2027',
+    deadline: '2027-01-01T23:59:59-03:00',
+    closedMessage: 'El plazo para confirmar asistencia ya cerró. Si necesitás avisarnos algo, escribinos directamente.',
     form: {
       namePlaceholder: 'Nombre y apellido',
       cantidadPersonasPlaceholder: 'Cantidad de personas',
@@ -108,15 +106,9 @@ export const site = {
 
   seo: {
     title: 'Sofy & Nico - Nuestra Boda',
-    description: 'Invitación de boda de Sofy y Nico. 19 de febrero de 2027, Pilar, Buenos Aires.',
-    ogImage: '/assets/hero.png',
+    description: 'Invitación de boda de Sofy y Nico. 12 de febrero de 2027, Pilar, Buenos Aires.',
+    ogImage: '/assets/og-image.jpg',
     url: 'https://wedding-invitation-inky-kappa-17.vercel.app/',
-    twitterHandle: '@nicolasdfoti',
-  },
-
-  contact: {
-    email: 'nicolasdfoti@gmail.com',
-    phone: '+54 9 11 5387-3620',
   },
 };
 

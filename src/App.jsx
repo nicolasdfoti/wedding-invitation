@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, LazyMotion, MotionConfig, domAnimation } from 'framer-motion';
 import ErrorBoundary from './components/layout/ErrorBoundary';
 import EnvelopeReveal from './components/ui/EnvelopeReveal';
 import Hero from './components/sections/Hero';
 import Countdown from './components/sections/Countdown';
 import Story from './components/sections/Story';
 import Details from './components/sections/Details';
-import Location from './components/sections/Location';
 import DressCode from './components/sections/DressCode';
 import GiftList from './components/sections/GiftList';
 import Gallery from './components/sections/Gallery';
@@ -17,28 +16,34 @@ export default function App() {
   const [isOpened, setIsOpened] = useState(false);
 
   useEffect(() => {
-    document.body.style.overflow = isOpened ? 'unset' : 'hidden';
+    document.body.style.overflow = isOpened ? '' : 'hidden';
   }, [isOpened]);
 
   return (
     <ErrorBoundary>
-      <AnimatePresence>
-        {!isOpened && <EnvelopeReveal onOpen={() => setIsOpened(true)} />}
-      </AnimatePresence>
+      <MotionConfig reducedMotion="user">
+        <LazyMotion features={domAnimation} strict>
+          <AnimatePresence>
+            {!isOpened && <EnvelopeReveal onOpen={() => setIsOpened(true)} />}
+          </AnimatePresence>
 
-      {isOpened && (
-        <div className="overflow-x-hidden animate-fade-in">
-          <Hero />
-          <Countdown />
-          <Story />
-          <Details />
-          <DressCode />
-          <GiftList />
-          <Gallery />
-          <RSVP />
-          <Footer />
-        </div>
-      )}
+          {isOpened && (
+            <div className="overflow-x-hidden animate-fade-in">
+              <main>
+                <Hero />
+                <Countdown />
+                <Story />
+                <Details />
+                <DressCode />
+                <GiftList />
+                <Gallery />
+                <RSVP />
+              </main>
+              <Footer />
+            </div>
+          )}
+        </LazyMotion>
+      </MotionConfig>
     </ErrorBoundary>
   );
 }

@@ -1,56 +1,94 @@
-import { Gift, Copy, ExternalLink } from 'lucide-react';
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { useScrollReveal } from '../../hooks/useScrollReveal';
+import { Gift, Copy, Check, ExternalLink } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { m } from 'framer-motion';
+import { fadeUp, revealViewport } from '../../lib/motion';
 import Container from '../ui/Container';
 import SectionTitle from '../ui/SectionTitle';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import site from '../../config/site';
 
-export default function GiftList() {
-  const { ref, isVisible } = useScrollReveal({ triggerOnce: true });
-  const [copied, setCopied] = useState(null);
+const ACCOUNT_FIELDS = [
+  { key: 'alias', label: 'Alias' },
+  { key: 'cbu', label: 'CBU' },
+  { key: 'cvu', label: 'CVU' },
+];
 
-  const handleCopy = (text, label) => {
-    navigator.clipboard.writeText(text);
-    setCopied(label);
-    setTimeout(() => setCopied(null), 2000);
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    // Fallback para navegadores sin Clipboard API (o sin permisos)
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    return ok;
+  }
+}
+
+function CopyRow({ label, value, copied, onCopy }) {
+  return (
+    <div className="flex items-center justify-between gap-3 p-3 bg-fondo rounded-xl">
+      <div className="min-w-0">
+        <p className="text-xs uppercase tracking-wider text-gray-500">{label}</p>
+        <p className="font-mono text-sm text-gray-800 break-all">{value}</p>
+      </div>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onCopy}
+        aria-label={copied ? `${label} copiado` : `Copiar ${label}`}
+      >
+        {copied ? (
+          <Check className="w-4 h-4 text-green-600" aria-hidden="true" />
+        ) : (
+          <Copy className="w-4 h-4" aria-hidden="true" />
+        )}
+      </Button>
+    </div>
+  );
+}
+
+export default function GiftList() {
+  const [copied, setCopied] = useState(null);
+  const timeoutRef = useRef(null);
+
+  useEffect(() => () => clearTimeout(timeoutRef.current), []);
+
+  const handleCopy = async (text, id) => {
+    const ok = await copyToClipboard(text);
+    if (!ok) return;
+    setCopied(id);
+    clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setCopied(null), 2000);
   };
 
   return (
-    <section
-      ref={ref}
-      className="section bg-white"
-      aria-labelledby="giftlist-title"
-    >
+    <section className="section bg-white" aria-labelledby="giftlist-title">
       <Container size="md">
-        <SectionTitle
-          id="giftlist-title"
-          subtitle="Regalos"
-          dividerColor="gold"
-        >
+        <SectionTitle id="giftlist-title" subtitle="Regalos" dividerColor="gold">
           {site.giftList.title}
         </SectionTitle>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: isVisible ? 0.2 : 0, duration: 0.6 }}
-          className="space-y-8"
-        >
+        <p className="sr-only" role="status" aria-live="polite">
+          {copied ? 'Copiado al portapapeles' : ''}
+        </p>
+
+        <m.div {...fadeUp} transition={{ delay: 0.2, duration: 0.6 }} className="space-y-8">
           <Card variant="elevated" padding="xl" className="text-center">
             <Gift className="mx-auto text-gold mb-4" size={48} aria-hidden="true" />
-            <h3 className="font-title text-2xl text-gray mb-3">{site.giftList.description}</h3>
+            <p className="font-title text-2xl text-gray-700 mb-3">{site.giftList.description}</p>
           </Card>
 
           {site.giftList.url && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: isVisible ? 0.5 : 0, duration: 0.4 }}
-              className="text-center"
-            >
+            <div className="text-center">
               <Button
                 variant="secondary"
                 size="lg"
@@ -59,16 +97,17 @@ export default function GiftList() {
                 <ExternalLink className="w-5 h-5 mr-2" aria-hidden="true" />
                 Ver lista completa de regalos
               </Button>
-            </motion.div>
+            </div>
           )}
 
           <div className="grid md:grid-cols-2 gap-6">
             {site.giftList.accounts.map((account, index) => (
-              <motion.article
+              <m.article
                 key={account.bank}
                 initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: isVisible ? 0.3 + index * 0.1 : 0, duration: 0.4 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={revealViewport}
+                transition={{ delay: 0.3 + index * 0.1, duration: 0.4 }}
               >
                 <Card variant="outlined" padding="lg" className="h-full">
                   <div className="flex items-center gap-3 mb-4">
@@ -76,75 +115,30 @@ export default function GiftList() {
                       <Gift className="text-gold" size={24} />
                     </div>
                     <div>
-                      <h4 className="font-title text-xl text-blue">{account.bank}</h4>
+                      <h3 className="font-title text-xl text-blue">{account.bank}</h3>
                       <p className="text-sm text-gray-500">Cuenta para transferencia</p>
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    {account.alias && (
-                      <div className="flex items-center justify-between p-3 bg-fondo rounded-xl">
-                        <div>
-                          <p className="text-xs uppercase tracking-wider text-gray-500">Alias / CVU</p>
-                          <p className="font-mono text-sm text-gray-800 break-all">{account.alias}</p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleCopy(account.alias, 'alias')}
-                          aria-label={copied === 'alias' ? 'Copiado' : `Copiar ${account.alias}`}
-                        >
-                          {copied === 'alias' ? (
-                            <>
-                              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <polyline points="20 6 9 17 4 12" />
-                              </svg>
-                              <span className="sr-only">Copiado</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-4 h-4" aria-hidden="true" />
-                              <span className="sr-only">Copiar</span>
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    )}
-
-                    {account.cbu && (
-                      <div className="flex items-center justify-between p-3 bg-fondo rounded-xl">
-                        <div>
-                          <p className="text-xs uppercase tracking-wider text-gray-500">CBU</p>
-                          <p className="font-mono text-sm text-gray-800 break-all">{account.cbu}</p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleCopy(account.cbu, 'cbu')}
-                          aria-label={copied === 'cbu' ? 'Copiado' : `Copiar CBU`}
-                        >
-                          {copied === 'cbu' ? (
-                            <>
-                              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <polyline points="20 6 9 17 4 12" />
-                              </svg>
-                              <span className="sr-only">Copiado</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-4 h-4" aria-hidden="true" />
-                              <span className="sr-only">Copiar</span>
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    )}
+                    {ACCOUNT_FIELDS.filter(({ key }) => account[key]).map(({ key, label }) => {
+                      const id = `${account.bank}-${key}`;
+                      return (
+                        <CopyRow
+                          key={id}
+                          label={label}
+                          value={account[key]}
+                          copied={copied === id}
+                          onCopy={() => handleCopy(account[key], id)}
+                        />
+                      );
+                    })}
                   </div>
                 </Card>
-              </motion.article>
+              </m.article>
             ))}
           </div>
-        </motion.div>
+        </m.div>
       </Container>
     </section>
   );

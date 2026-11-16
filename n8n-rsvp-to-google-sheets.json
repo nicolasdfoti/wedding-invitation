@@ -1,0 +1,217 @@
+{
+  "name": "Boda Sofy & Nico · RSVP → Google Sheets",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "rsvp-boda",
+        "authentication": "headerAuth",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "77a306d1-d537-4705-a48e-e92f13b1e013",
+      "name": "Webhook Supabase (nuevo RSVP)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "bf81bd8a-d8ae-4e26-9d9c-bb5ab306224d"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "633d3cb3-a51e-4333-b7b9-3979e744c81e",
+              "leftValue": "={{ $json.body.type }}",
+              "rightValue": "INSERT",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "7b63d134-1539-4440-826c-7837355193cf",
+              "leftValue": "={{ $json.body.table }}",
+              "rightValue": "rsvp",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5a60841a-fdca-47b1-855b-4e8db479faa8",
+      "name": "¿Es un INSERT en rsvp?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ad74720d-377a-4e8e-8be8-0642c1706735",
+              "name": "Fecha de confirmación",
+              "value": "={{ ($json.body.record.created_at ? DateTime.fromISO($json.body.record.created_at) : $now).setZone('America/Argentina/Buenos_Aires').toFormat('dd/MM/yyyy HH:mm') }}",
+              "type": "string"
+            },
+            {
+              "id": "599834cd-8fe4-43d1-8223-9c4b88bbbc43",
+              "name": "Nombre",
+              "value": "={{ $json.body.record.nombre }}",
+              "type": "string"
+            },
+            {
+              "id": "234237a3-82f9-4144-927e-93c9a1d83cf3",
+              "name": "Cantidad de personas",
+              "value": "={{ $json.body.record.cantidad_personas }}",
+              "type": "number"
+            },
+            {
+              "id": "e52f95a6-d66b-40a6-b7e8-4d74cf187588",
+              "name": "Asistencia",
+              "value": "={{ $json.body.record.asistencia ? 'Sí' : 'No' }}",
+              "type": "string"
+            },
+            {
+              "id": "1dea7341-dcaa-433b-82cc-923d1b2c0541",
+              "name": "Restricciones alimentarias",
+              "value": "={{ $json.body.record.restricciones ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "71fac959-1eaa-4877-a429-bf31294f817a",
+              "name": "Mensaje",
+              "value": "={{ $json.body.record.mensaje ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "b3ae629d-38d7-44b5-8c4f-dfb42cea13fc",
+              "name": "ID Supabase",
+              "value": "={{ $json.body.record.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "82f05f90-43d7-45c1-a950-b3c03334954b",
+      "name": "Formatear fila",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1rzxH3G1e2Ucfs7q473AG4Ib4t65l1K-q1uyjC83B-OA",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rzxH3G1e2Ucfs7q473AG4Ib4t65l1K-q1uyjC83B-OA/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "459b52f8-6fcc-4a0b-80ea-3b4016ba3ba0",
+      "name": "Agregar fila en Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        720,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## RSVP → Google Sheets\n\n1. **Webhook**: asigná una credencial *Header Auth* con nombre `x-webhook-secret` y un valor secreto. Activá el workflow y copiá la *Production URL*.\n2. **Supabase** → Database → Webhooks → *Create*: tabla `public.rsvp`, evento **Insert**, método POST, URL = Production URL, header `x-webhook-secret: <el mismo secreto>`.\n3. **Google Sheets**: asigná tu credencial de Google. La primera fila de la hoja debe tener los encabezados:\n`Fecha de confirmación | Nombre | Cantidad de personas | Asistencia | Restricciones alimentarias | Mensaje | ID Supabase`\n\nDetalle completo en el README del repo.",
+        "height": 380,
+        "width": 520,
+        "color": 4
+      },
+      "id": "7a692f49-5013-4da6-9d76-553ca021dbe3",
+      "name": "Instrucciones",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -420
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Supabase (nuevo RSVP)": {
+      "main": [
+        [
+          {
+            "node": "¿Es un INSERT en rsvp?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es un INSERT en rsvp?": {
+      "main": [
+        [
+          {
+            "node": "Formatear fila",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatear fila": {
+      "main": [
+        [
+          {
+            "node": "Agregar fila en Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Argentina/Buenos_Aires"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

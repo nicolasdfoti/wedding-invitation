@@ -23,6 +23,13 @@ const SectionTitle = forwardRef(
       accent: 'bg-accent',
       coral: 'bg-coral',
       blue: 'bg-blue',
+      peach: 'bg-peach',
+    };
+
+    const dividerAlignments = {
+      left: 'mr-auto',
+      center: 'mx-auto',
+      right: 'ml-auto',
     };
 
     return (
@@ -34,7 +41,7 @@ const SectionTitle = forwardRef(
         )}
         <h2 className={`font-title text-5xl text-blue mb-4 ${titleClassName}`}>{children}</h2>
         {divider && (
-          <div className={`${dividerColors[dividerColor]} w-24 h-px mx-auto ${align !== 'center' ? 'mx-0' : ''} mt-4`} />
+          <div className={`${dividerColors[dividerColor] ?? dividerColors.gold} w-24 h-px ${dividerAlignments[align]} mt-4`} aria-hidden="true" />
         )}
       </div>
     );

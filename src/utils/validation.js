@@ -1,8 +1,3 @@
-export function validateEmail(email) {
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return re.test(email);
-}
-
 export function validateRequired(value) {
   return value !== undefined && value !== null && value.toString().trim() !== '';
 }
@@ -82,18 +77,4 @@ export function validateRSVPForm(formData) {
 
   const hasErrors = Object.values(errors).some(arr => arr.length > 0);
   return { errors, hasErrors, isValid: !hasErrors };
-}
-
-export function sanitizeInput(input) {
-  const div = document.createElement('div');
-  div.textContent = input;
-  return div.innerHTML;
-}
-
-export function debounce(fn, delay) {
-  let timeoutId;
-  return (...args) => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => fn(...args), delay);
-  };
 }

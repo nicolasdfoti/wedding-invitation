@@ -1,6 +1,6 @@
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useCountdown } from '../../hooks/useCountdown';
-import { useScrollReveal } from '../../hooks/useScrollReveal';
+import { fadeUp, revealViewport } from '../../lib/motion';
 import Container from '../ui/Container';
 import SectionTitle from '../ui/SectionTitle';
 import site from '../../config/site';
@@ -13,69 +13,60 @@ const timeUnits = [
 ];
 
 export default function Countdown() {
-  const { ref, isVisible } = useScrollReveal({ triggerOnce: true });
   const time = useCountdown(site.wedding.isoString);
-  const expired = time.expired;
+  const { expired } = time;
 
   return (
-    <section
-      ref={ref}
-      className="section bg-white"
-      aria-labelledby="countdown-title"
-      role="timer"
-      aria-live="polite"
-    >
+    <section className="section bg-white" aria-labelledby="countdown-title">
       <Container size="md">
-        <SectionTitle
-          id="countdown-title"
-          subtitle="Cuenta regresiva"
-          dividerColor="accent"
-        >
+        <SectionTitle id="countdown-title" subtitle="Cuenta regresiva" dividerColor="accent">
           {expired ? '¡Llegó el día!' : 'Faltan'}
         </SectionTitle>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: isVisible ? 0.2 : 0, duration: 0.6 }}
+        {/* Resumen para lectores de pantalla: sin aria-live para no anunciar cada segundo */}
+        {!expired && (
+          <p className="sr-only">
+            Faltan {time.days} {time.days === 1 ? 'día' : 'días'} para la boda.
+          </p>
+        )}
+
+        <m.div
+          {...fadeUp}
+          transition={{ delay: 0.2, duration: 0.6 }}
           className="grid grid-cols-2 md:grid-cols-4 gap-6"
-          role="list"
-          aria-label="Tiempo restante para la boda"
+          aria-hidden="true"
         >
-          {timeUnits.map(({ key, label, singular }) => {
+          {timeUnits.map(({ key, label, singular }, index) => {
             const value = time[key] ?? 0;
             return (
-              <motion.div
+              <m.div
                 key={key}
                 initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: isVisible ? 0.3 + timeUnits.indexOf({ key, label, singular }) * 0.1 : 0, duration: 0.4 }}
+                whileInView={{ scale: 1, opacity: 1 }}
+                viewport={revealViewport}
+                transition={{ delay: 0.3 + index * 0.1, duration: 0.4 }}
                 className="p-6 rounded-3xl bg-fondo shadow-soft text-center"
-                role="listitem"
               >
-                <div
-                  className="text-4xl md:text-5xl font-bold text-accent mb-2 tabular-nums"
-                  aria-label={`${value} ${value === 1 ? singular : label}`}
-                >
+                <div className="text-4xl md:text-5xl font-bold text-accent mb-2 tabular-nums">
                   {String(value).padStart(2, '0')}
                 </div>
                 <div className="uppercase text-sm tracking-widest text-gray-500">
                   {value === 1 ? singular : label}
                 </div>
-              </motion.div>
+              </m.div>
             );
           })}
-        </motion.div>
+        </m.div>
 
         {expired && (
-          <motion.p
+          <m.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
             className="mt-10 text-center font-title text-3xl text-coral italic"
           >
             ¡Hoy celebramos su amor!
-          </motion.p>
+          </m.p>
         )}
       </Container>
     </section>
