@@ -24,6 +24,9 @@ function eventStart(time) {
   return new Date(`${site.wedding.date}T${time}:00${offset}`);
 }
 
+// "2027-02-12" → "12/02/2027"
+const weddingDate = site.wedding.date.split('-').reverse().join('/');
+
 function handleAddToCalendar() {
   const events = eventItems.map((event) => {
     const start = eventStart(event.time);
@@ -63,7 +66,11 @@ export default function Details() {
                   <div className="text-center">
                     <Icon className="mx-auto text-accent mb-4" size={42} aria-hidden="true" />
                     <h3 className="font-title text-2xl text-blue mb-2">{item.label}</h3>
-                    <p className="text-accent font-semibold mb-1">{item.time} hs</p>
+                    <p className="text-accent font-semibold mb-1">
+                      {weddingDate}
+                      <span className="mx-2 text-accent/50" aria-hidden="true">·</span>
+                      {item.time} hs
+                    </p>
                     <p className="text-gray-600 mb-2">{item.location}</p>
                     {item.description && (
                       <p className="text-sm text-gray-500 italic mb-4">{item.description}</p>

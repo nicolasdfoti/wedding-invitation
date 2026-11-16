@@ -8,7 +8,7 @@ export default function Story() {
   return (
     <section className="section bg-white" aria-labelledby="story-title">
       <Container size="md">
-        <SectionTitle id="story-title" subtitle="Nuestra historia" dividerColor="gold">
+        <SectionTitle id="story-title" subtitle="Un poco de nosotros" dividerColor="gold">
           {site.story.title}
         </SectionTitle>
 
