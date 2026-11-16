@@ -1,4 +1,4 @@
-import { Shirt, Sparkles } from 'lucide-react';
+import { Ban, Shirt, Sparkles } from 'lucide-react';
 import { m } from 'framer-motion';
 import { fadeUp, revealViewport } from '../../lib/motion';
 import Container from '../ui/Container';
@@ -47,6 +47,19 @@ export default function DressCode() {
                 </m.div>
               ))}
             </div>
+
+            {site.dressCode.notice && (
+              <m.div
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={revealViewport}
+                transition={{ delay: 0.6, duration: 0.4 }}
+                className="mt-4 flex items-center justify-center gap-3 p-4 rounded-xl border border-coral/60 bg-coral/10"
+              >
+                <Ban className="text-coral flex-shrink-0" size={20} aria-hidden="true" />
+                <p className="text-gray-800 font-semibold tracking-wide">{site.dressCode.notice}</p>
+              </m.div>
+            )}
           </Card>
         </m.div>
       </Container>

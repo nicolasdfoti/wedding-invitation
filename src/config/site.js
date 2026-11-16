@@ -72,6 +72,7 @@ export const site = {
       'Colores: ¡Queremos una celebración llena de color!',
       'Vestimenta: Trajes y vestidos elegantes',
     ],
+    notice: 'Mujeres: no vestimenta blanca',
   },
 
   giftList: {

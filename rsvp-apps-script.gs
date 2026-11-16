@@ -2,9 +2,15 @@
  * Boda Sofy & Nico · RSVP (Supabase) → Google Sheets + mail de aviso
  * Reemplaza el workflow de n8n. Corre en Google, gratis y siempre prendido.
  *
+ * El repo es público: este archivo NO tiene secretos ni mails. Esos datos viven en
+ * las Propiedades del script (solo las ve tu cuenta de Google).
+ *
  * Instalación:
+ * 0. La fila 1 de la planilla ya tiene los encabezados (ver más abajo): no hay que tocarla.
  * 1. Abrí la planilla RSVP → Extensiones → Apps Script. Pegá este archivo entero.
- * 2. Cambiá SECRET por un texto largo y aleatorio.
+ * 2. Configuración del proyecto (⚙️) → Propiedades del script → agregar:
+ *      SECRET     = un texto largo y aleatorio (ej. generado con un gestor de contraseñas)
+ *      AVISAR_A   = mails separados por coma que reciben el aviso de cada RSVP
  * 3. Implementar → Nueva implementación → tipo "Aplicación web"
  *      Ejecutar como: Yo   ·   Quién tiene acceso: Cualquier persona
  *    Autorizá con tu cuenta (si aparece "Google no verificó esta app":
@@ -21,13 +27,17 @@
  * editar → Versión: nueva. Así la URL /exec sigue siendo la misma.
  */
 
-const SECRET = '123456789';
 const SPREADSHEET_ID = '1rzxH3G1e2Ucfs7q473AG4Ib4t65l1K-q1uyjC83B-OA';
-const AVISAR_A = 'nicolasdfoti@gmail.com,sofylortega@gmail.com';
 const TZ = 'America/Argentina/Buenos_Aires';
 
+// Secreto y destinatarios se leen de Configuración → Propiedades del script.
+const PROPS = PropertiesService.getScriptProperties();
+const SECRET = PROPS.getProperty('SECRET');
+const AVISAR_A = PROPS.getProperty('AVISAR_A');
+
 function doPost(e) {
-  if (!e || !e.parameter || e.parameter.secret !== SECRET) {
+  // Sin SECRET configurado, el script rechaza todo (nunca queda abierto por error).
+  if (!SECRET || !e || !e.parameter || e.parameter.secret !== SECRET) {
     return respuesta('forbidden');
   }
 
@@ -49,20 +59,22 @@ function doPost(e) {
   const restricciones = texto(r.restricciones);
   const mensaje = texto(r.mensaje);
 
-  // Hoja 1 (gid=0): Fecha de confirmación | Nombre | Cantidad de personas |
-  // Asistencia | Restricciones alimentarias | Mensaje | ID Supabase
+  // Hoja 1 (gid=0), fila 1:
+  // ID | Nombre | Personas | Asistencia | Restricciones | Mensaje | Fecha | Mesa
+  // "Mesa" queda vacía para que la completen ustedes.
   const hoja = SpreadsheetApp.openById(SPREADSHEET_ID).getSheets()[0];
   hoja.appendRow([
-    fecha,
+    String(r.id ?? ''),
     seguro(nombre),
     Number(r.cantidad_personas) || 0,
     asistencia,
     seguro(restricciones),
     seguro(mensaje),
-    String(r.id ?? ''),
+    fecha,
   ]);
 
   // El mail va aparte: si falla (por ejemplo, cupo diario de Gmail), la fila ya quedó guardada.
+  if (!AVISAR_A) return respuesta('ok');
   try {
     MailApp.sendEmail({
       to: AVISAR_A,

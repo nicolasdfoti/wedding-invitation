@@ -11,7 +11,11 @@ import site from '../../config/site';
 const eventItems = [
   { key: 'civil', icon: Calendar, description: '' },
   { key: 'reception', icon: Clock, description: '' },
-  { key: 'sealing', icon: MapPin, description: 'Opcional' },
+  {
+    key: 'sealing',
+    icon: MapPin,
+    description: 'No podemos asegurarles el ingreso a la sesión, ¡pero los esperamos en los jardines del Templo!',
+  },
 ].map(({ key, ...rest }) => ({ key, ...site.events[key], ...rest }));
 
 // Convierte "HH:MM" del día de la boda en una fecha con la zona horaria de Argentina.
