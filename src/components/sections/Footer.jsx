@@ -1,23 +1,19 @@
 import { Heart } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { useScrollReveal } from '../../hooks/useScrollReveal';
+import { m } from 'framer-motion';
+import { fadeUp, revealViewport } from '../../lib/motion';
 import Container from '../ui/Container';
 import site from '../../config/site';
 
 export default function Footer() {
-  const { ref, isVisible } = useScrollReveal({ triggerOnce: true });
-
   return (
     <footer
-      ref={ref}
       className="py-16 bg-fondo border-t border-peach/30"
       role="contentinfo"
     >
       <Container size="md">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: isVisible ? 0.2 : 0, duration: 0.6 }}
+        <m.div
+          {...fadeUp}
+          transition={{ delay: 0.2, duration: 0.6 }}
           className="text-center"
         >
           <Heart
@@ -26,24 +22,26 @@ export default function Footer() {
             aria-hidden="true"
           />
 
-          <motion.blockquote
+          <m.blockquote
             initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: isVisible ? 0.4 : 0, duration: 0.5 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={revealViewport}
+            transition={{ delay: 0.4, duration: 0.5 }}
             className="font-title text-3xl italic text-gray-500 mb-6"
           >
             &ldquo;{site.couple.quote}&rdquo;
-          </motion.blockquote>
+          </m.blockquote>
 
-          <motion.p
+          <m.p
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: isVisible ? 0.6 : 0, duration: 0.5 }}
+            whileInView={{ opacity: 1 }}
+            viewport={revealViewport}
+            transition={{ delay: 0.6, duration: 0.5 }}
             className="text-xs tracking-[0.3em] uppercase text-gray-400"
           >
             {site.couple.madeWithLoveBy}
-          </motion.p>
-        </motion.div>
+          </m.p>
+        </m.div>
       </Container>
     </footer>
   );

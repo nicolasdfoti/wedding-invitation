@@ -1,27 +1,15 @@
-export function formatDate(date, locale = 'es-AR', options = {}) {
-  const defaultOptions = {
+export function formatDate(date, { locale = 'es-AR', timeZone, ...options } = {}) {
+  return new Date(date).toLocaleDateString(locale, {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
+    timeZone,
     ...options,
-  };
-  return new Date(date).toLocaleDateString(locale, defaultOptions);
-}
-
-export function formatTime(date, locale = 'es-AR', options = {}) {
-  const defaultOptions = {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-    ...options,
-  };
-  return new Date(date).toLocaleTimeString(locale, defaultOptions);
+  });
 }
 
 export function getTimeUntil(targetDate) {
-  const now = new Date();
-  const target = new Date(targetDate);
-  const diff = target - now;
+  const diff = new Date(targetDate) - new Date();
 
   if (diff <= 0) {
     return { days: 0, hours: 0, minutes: 0, seconds: 0, expired: true };
@@ -36,43 +24,51 @@ export function getTimeUntil(targetDate) {
   };
 }
 
-export function generateICS(event) {
-  const { title, description, location, startDate, endDate, url } = event;
+function escapeICS(text = '') {
+  return String(text)
+    .replace(/\\/g, '\\\\')
+    .replace(/;/g, '\\;')
+    .replace(/,/g, '\\,')
+    .replace(/\r?\n/g, '\\n');
+}
 
-  const formatICSDate = (date) => {
-    const d = new Date(date);
-    return d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-  };
+function formatICSDate(date) {
+  return new Date(date).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+}
 
-  const lines = [
+export function generateICS(events, calendarName = 'Boda Sofy & Nico') {
+  const vevents = events.flatMap((event) => [
+    'BEGIN:VEVENT',
+    `UID:${event.uid}`,
+    `DTSTAMP:${formatICSDate(new Date())}`,
+    `DTSTART:${formatICSDate(event.startDate)}`,
+    `DTEND:${formatICSDate(event.endDate)}`,
+    `SUMMARY:${escapeICS(event.title)}`,
+    `DESCRIPTION:${escapeICS(event.description)}`,
+    `LOCATION:${escapeICS(event.location)}`,
+    'END:VEVENT',
+  ]);
+
+  return [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
     'PRODID:-//Sofy & Nico//Boda//ES',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
-    'BEGIN:VEVENT',
-    `UID:${Date.now()}@sofyynico.com`,
-    `DTSTAMP:${formatICSDate(new Date())}`,
-    `DTSTART:${formatICSDate(startDate)}`,
-    `DTEND:${formatICSDate(endDate)}`,
-    `SUMMARY:${title}`,
-    `DESCRIPTION:${description}\\n\\n${url || ''}`,
-    `LOCATION:${location}`,
-    'END:VEVENT',
+    `X-WR-CALNAME:${escapeICS(calendarName)}`,
+    ...vevents,
     'END:VCALENDAR',
-  ];
-
-  return lines.join('\r\n');
+  ].join('\r\n');
 }
 
-export function downloadICS(event, filename = 'boda-sofy-nico.ics') {
-  const icsContent = generateICS(event);
-  const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+export function downloadICS(events, filename = 'boda-sofy-nico.ics') {
+  const blob = new Blob([generateICS(events)], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
+  link.href = url;
   link.download = filename;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  URL.revokeObjectURL(link.href);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
