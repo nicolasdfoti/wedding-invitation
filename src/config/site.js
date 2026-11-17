@@ -1,3 +1,7 @@
+// Cuentas para transferir y WhatsApp: viven en un JSON compartido con la función
+// de mails (supabase/functions/notify-gift), así los datos son los mismos en todos lados.
+import couple from '../../supabase/functions/_shared/couple.json';
+
 export const site = {
   couple: {
     names: 'Sofy & Nico',
@@ -78,11 +82,29 @@ export const site = {
   giftList: {
     title: 'Lista de Regalos',
     description: 'Su presencia es el mejor regalo, pero si desean obsequiarnos algo:',
-    accounts: [
-      { bank: 'Banco BBVA', alias: 'nicolasfoti', cbu: '0170039840000034645646' },
-      { bank: 'Mercado Pago', alias: 'nicolasdfoti', cvu: '0000003100035561508263' },
+    // Para cambiar cuentas o titular: supabase/functions/_shared/couple.json
+    holder: couple.holder,
+    accounts: couple.accounts,
+    url: '/regalos',
+  },
+
+  // WhatsApp para coordinar entregas y consultas (en couple.json).
+  contacts: couple.contacts,
+
+  giftsPage: {
+    message:
+      'Lo más importante es que estés con nosotros ese día. Si además querés hacernos un regalo, armamos esta lista con las cosas que nos van a ayudar a armar nuestra casa.',
+    // Los 3 pasos se muestran en una línea, en orden.
+    steps: [
+      'Elegí algo de la lista y tocá "Lo regalo".',
+      'Dejá tu nombre: queda reservado y nadie más lo elige.',
+      'Te llevamos al link para comprarlo (o a los datos para transferir). Los links son orientativos: podés comprarlo donde quieras.',
     ],
-    url: 'https://docs.google.com/spreadsheets/d/1W6zMDF4_RY91wbJqeuTRuJjl34cl6uly7o_jBrrLIqI/edit?usp=drive_web&ouid=101677422371794383247',
+    whatsappText: 'Hola! Te escribo por la lista de regalos de la boda…',
+    priceNote: 'Los precios son de referencia, tomados en noviembre de 2026, y pueden variar.',
+    // Campo "Tu mail (opcional)" al reservar → mail de agradecimiento desde Gmail.
+    // Ponelo en false si alguna vez desactivan los mails.
+    thankYouEmail: true,
   },
 
   rsvp: {

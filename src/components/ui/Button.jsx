@@ -3,6 +3,7 @@ import { forwardRef } from 'react';
 const Button = forwardRef(
   (
     {
+      as: Tag = 'button',
       children,
       variant = 'primary',
       size = 'md',
@@ -31,11 +32,13 @@ const Button = forwardRef(
       lg: 'px-8 py-4 text-base rounded-full',
     };
 
+    // Con as="a" se puede usar el mismo estilo en links.
+    const elementProps = Tag === 'button' ? { type, disabled: disabled || loading } : {};
+
     return (
-      <button
+      <Tag
         ref={ref}
-        type={type}
-        disabled={disabled || loading}
+        {...elementProps}
         className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${fullWidth ? 'w-full' : ''} ${className}`}
         {...props}
       >
@@ -67,7 +70,7 @@ const Button = forwardRef(
         ) : (
           children
         )}
-      </button>
+      </Tag>
     );
   }
 );
