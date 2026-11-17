@@ -98,7 +98,7 @@ export const site = {
     steps: [
       'Elegí algo de la lista y tocá "Lo regalo".',
       'Dejá tu nombre: queda reservado y nadie más lo elige.',
-      'Te llevamos al link para comprarlo (o a los datos para transferir). Los links son orientativos: podés comprarlo donde quieras.',
+      'Te llevamos al link para comprarlo (o a los datos para transferir). Podés traerlo a la boda o enviarlo; si lo enviás, escribinos para coordinar la dirección.',
     ],
     whatsappText: 'Hola! Te escribo por la lista de regalos de la boda…',
     priceNote: 'Los precios son de referencia, tomados en noviembre de 2026, y pueden variar.',

@@ -39,6 +39,16 @@ create table if not exists public.gift_reservations (
 alter table public.gift_reservations add column if not exists email text
   check (email is null or (char_length(email) <= 254 and email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$'));
 
+-- Si lo compra: dónde ('link1'/'link2' = uno de los links de la lista, 'propia' = en otro lado),
+-- cómo lo hace llegar ('llevo' = a la boda, 'envio' = coordinan la dirección) y, si lo compra
+-- en otro lado, el link de dónde (opcional).
+alter table public.gift_reservations add column if not exists opcion text
+  check (opcion is null or opcion in ('link1', 'link2', 'propia'));
+alter table public.gift_reservations add column if not exists entrega text
+  check (entrega is null or entrega in ('llevo', 'envio'));
+alter table public.gift_reservations add column if not exists link_compra text
+  check (link_compra is null or (char_length(link_compra) <= 500 and link_compra ~* '^https?://'));
+
 -- Concurrencia: como máximo UNA reserva activa por ítem. Si dos personas
 -- reservan a la vez, la base rechaza la segunda.
 create unique index if not exists gift_reservations_una_activa
@@ -62,7 +72,8 @@ revoke all on public.gift_items, public.gift_reservations, public.gift_email_log
 
 -- Vista para que ustedes vean las reservas con el nombre del ítem (Table Editor).
 create or replace view public.regalos_reservas with (security_invoker = true) as
-  select r.created_at, r.item_id, i.item, i.categoria, r.nombre, r.mensaje, r.forma, r.estado, r.released_at, r.email
+  select r.created_at, r.item_id, i.item, i.categoria, r.nombre, r.mensaje, r.forma, r.estado, r.released_at, r.email,
+         r.entrega, r.link_compra, r.opcion
   from public.gift_reservations r
   join public.gift_items i on i.id = r.item_id
   order by r.created_at desc;
@@ -113,17 +124,24 @@ language sql stable security definer set search_path = public as $fn$
   order by i.orden, i.id;
 $fn$;
 
--- Versión anterior (sin mail): se borra para que no queden dos funciones con el mismo nombre.
+-- Versiones anteriores (sin mail / sin entrega ni link): se borran para que no queden
+-- dos funciones con el mismo nombre.
 drop function if exists public.reserve_gift(text, text, text, text, text);
+drop function if exists public.reserve_gift(text, text, text, text, text, text);
+drop function if exists public.reserve_gift(text, text, text, text, text, text, text, text);
 
 create or replace function public.reserve_gift(
-  p_item_id text, p_nombre text, p_mensaje text, p_forma text, p_token text, p_email text default null
+  p_item_id text, p_nombre text, p_mensaje text, p_forma text, p_token text, p_email text default null,
+  p_entrega text default null, p_link text default null, p_opcion text default null
 )
 returns jsonb language plpgsql volatile security definer set search_path = public as $fn$
 declare
   v_nombre  text := public._gift_clean(p_nombre, false);
   v_mensaje text := public._gift_clean(p_mensaje, true);
   v_email   text := lower(public._gift_clean(p_email, false));
+  v_entrega text := public._gift_clean(p_entrega, false);
+  v_link    text := public._gift_clean(p_link, false);
+  v_opcion  text := public._gift_clean(p_opcion, false);
   v_item    public.gift_items%rowtype;
 begin
   if v_nombre is null or char_length(v_nombre) < 2 or char_length(v_nombre) > 100 then
@@ -141,6 +159,23 @@ begin
   if p_token is null or char_length(p_token) not between 20 and 200 then
     return jsonb_build_object('ok', false, 'error', 'invalid_token');
   end if;
+  -- Entrega y link sólo tienen sentido si lo compra (no al transferir).
+  if p_forma = 'transferencia' then
+    v_entrega := null;
+    v_link := null;
+    v_opcion := null;
+  elsif coalesce(v_entrega, '') not in ('llevo', 'envio') then
+    return jsonb_build_object('ok', false, 'error', 'invalid_entrega');
+  elsif v_opcion is not null and v_opcion not in ('link1', 'link2', 'propia') then
+    return jsonb_build_object('ok', false, 'error', 'invalid_opcion');
+  end if;
+  -- El link propio sólo se guarda si lo compra en otro lado.
+  if v_opcion in ('link1', 'link2') then
+    v_link := null;
+  end if;
+  if v_link is not null and (char_length(v_link) > 500 or v_link !~* '^https?://\S+\.\S+$') then
+    return jsonb_build_object('ok', false, 'error', 'invalid_link');
+  end if;
 
   select * into v_item from public.gift_items where gift_items.id = p_item_id and activo;
   if not found then
@@ -151,8 +186,8 @@ begin
   end if;
 
   begin
-    insert into public.gift_reservations (item_id, nombre, mensaje, forma, token_hash, email)
-    values (v_item.id, v_nombre, v_mensaje, p_forma, public._gift_token_hash(p_token), v_email);
+    insert into public.gift_reservations (item_id, nombre, mensaje, forma, token_hash, email, entrega, link_compra, opcion)
+    values (v_item.id, v_nombre, v_mensaje, p_forma, public._gift_token_hash(p_token), v_email, v_entrega, v_link, v_opcion);
   exception when unique_violation then
     return jsonb_build_object('ok', false, 'error', 'taken');
   end;
@@ -182,10 +217,10 @@ end;
 $fn$;
 
 revoke all on function public.get_gifts(text[])                          from public;
-revoke all on function public.reserve_gift(text, text, text, text, text, text) from public;
+revoke all on function public.reserve_gift(text, text, text, text, text, text, text, text, text) from public;
 revoke all on function public.release_gift(text, text)                   from public;
 grant execute on function public.get_gifts(text[])                          to anon, authenticated;
-grant execute on function public.reserve_gift(text, text, text, text, text, text) to anon, authenticated;
+grant execute on function public.reserve_gift(text, text, text, text, text, text, text, text, text) to anon, authenticated;
 grant execute on function public.release_gift(text, text)                   to anon, authenticated;
 
 -- ─── Seed (contenido del Excel). No pisa lo que ya editaron. ──────────────

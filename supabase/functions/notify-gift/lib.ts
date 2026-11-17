@@ -1,5 +1,6 @@
 // Lógica de notify-gift, separada de Deno.serve para poder testearla.
 import { buildThankYouEmail, escapeHtml, type GiftInfo } from './thankyou.ts';
+import { buyLinks } from '../_shared/stores.js';
 
 export { escapeHtml };
 
@@ -13,6 +14,9 @@ export type Reservation = {
   estado: 'activa' | 'liberada';
   released_at: string | null;
   email?: string | null;
+  entrega?: 'llevo' | 'envio' | null;
+  link_compra?: string | null;
+  opcion?: 'link1' | 'link2' | 'propia' | null;
 };
 
 export type WebhookPayload = {
@@ -47,6 +51,19 @@ const DEFAULT_FROM = 'Lista de Regalos <onboarding@resend.dev>';
 const FORMAS: Record<string, string> = {
   compra: 'Lo compro',
   transferencia: 'Transfiero el valor',
+};
+
+// "Arredo — https://…" si eligió un link de la lista, "En otro lado" si no.
+function where(r: Reservation, item: GiftInfo): string | null {
+  if (r.forma !== 'compra' || !r.opcion) return null;
+  if (r.opcion === 'propia') return 'En otro lado';
+  const link = (buyLinks(item) as { key: string; url: string; store: string }[]).find((l) => l.key === r.opcion);
+  return link ? `${link.store} — ${link.url}` : null;
+}
+
+const ENTREGAS: Record<string, string> = {
+  llevo: 'Lo lleva a la boda',
+  envio: 'Lo envía (escribirle para coordinar la dirección)',
 };
 
 export function classify(payload: WebhookPayload): Evento | null {
@@ -84,7 +101,7 @@ const oneLine = (s: string) => s.replace(/[\r\n]+/g, ' ').trim();
 export function buildEmail(
   evento: Evento,
   r: Reservation,
-  item: { item: string; categoria: string },
+  item: GiftInfo,
 ): { subject: string; html: string; text: string } {
   const titles: Record<Evento, string> = {
     reserva: `🎁 Nuevo regalo reservado: ${item.item} — de ${r.nombre}`,
@@ -101,6 +118,9 @@ export function buildEmail(
     ['Categoría', item.categoria],
     ['De', r.nombre],
     ['Forma', FORMAS[r.forma] ?? r.forma],
+    ...(where(r, item) ? ([['Dónde', where(r, item)]] as [string, string][]) : []),
+    ...(r.entrega ? ([['Entrega', ENTREGAS[r.entrega] ?? r.entrega]] as [string, string][]) : []),
+    ...(r.link_compra ? ([['Link', r.link_compra]] as [string, string][]) : []),
     ['Mensaje', r.mensaje?.trim() || '(sin mensaje)'],
     ...(r.email ? ([['Mail', r.email]] as [string, string][]) : []),
     [evento === 'liberada' ? 'Liberada el' : 'Fecha', `${when} (hora de Argentina)`],
@@ -294,7 +314,16 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
         from: senderFor(deps.env, provider!, 'Sofy & Nico'),
         to: guestEmail,
         replyTo,
-        ...buildThankYouEmail({ nombre: record.nombre, forma: record.forma }, item),
+        ...buildThankYouEmail(
+          {
+            nombre: record.nombre,
+            forma: record.forma,
+            entrega: record.entrega,
+            link: record.link_compra,
+            opcion: record.opcion,
+          },
+          item,
+        ),
       };
     });
   }

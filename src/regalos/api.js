@@ -98,7 +98,7 @@ export async function fetchGifts() {
 }
 
 // Devuelve { ok: true } o { ok: false, error: 'taken' | 'invalid_name' | … }.
-export async function reserveGift({ itemId, nombre, mensaje, email, forma }) {
+export async function reserveGift({ itemId, nombre, mensaje, email, forma, entrega, link, opcion }) {
   const token = newToken();
   const result = await rpc('reserve_gift', {
     p_item_id: itemId,
@@ -107,6 +107,9 @@ export async function reserveGift({ itemId, nombre, mensaje, email, forma }) {
     p_forma: forma,
     p_token: token,
     p_email: email || null,
+    p_entrega: entrega || null,
+    p_link: link || null,
+    p_opcion: opcion || null,
   });
   if (result?.ok) writeTokens({ ...readTokens(), [itemId]: token });
   return result;

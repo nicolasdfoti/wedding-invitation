@@ -15,6 +15,9 @@ export type GiftInfo = {
 export type Guest = {
   nombre: string;
   forma: 'compra' | 'transferencia';
+  entrega?: 'llevo' | 'envio' | null;
+  link?: string | null; // link propio si eligió "Lo compro en otro lado"
+  opcion?: 'link1' | 'link2' | 'propia' | null; // dónde lo compra (null = reservas viejas)
 };
 
 type Account = { bank: string; alias?: string; cbu?: string; cvu?: string };
@@ -74,9 +77,16 @@ export function buildThankYouEmail(
   const accounts = couple.accounts as Account[];
   const contacts = couple.contacts as Contact[];
   const isTransfer = guest.forma === 'transferencia';
-  const links = isTransfer ? [] : (buyLinks(gift) as { url: string; label: string }[]);
+  const allLinks = isTransfer ? [] : (buyLinks(gift) as { key: string; url: string; label: string }[]);
+  // Sólo el link que eligió. Las reservas viejas (sin opción guardada) muestran todos.
+  const opcion = guest.opcion ?? null;
+  const links = opcion ? allLinks.filter((l) => l.key === opcion) : allLinks;
   const price = typeof gift.precio === 'number' && gift.precio > 0 ? ars.format(gift.precio) : null;
-  const waText = `Hola! Soy ${guest.nombre}, reservé "${gift.item}" de la lista de regalos 🎁`;
+  const shipping = !isTransfer && guest.entrega === 'envio';
+  const ownLink = !isTransfer && guest.link && /^https?:\/\//i.test(guest.link) ? guest.link : null;
+  const waText = shipping
+    ? `Hola! Soy ${guest.nombre}, reservé "${gift.item}" de la lista de regalos 🎁 Lo quiero enviar, ¿me pasan la dirección?`
+    : `Hola! Soy ${guest.nombre}, reservé "${gift.item}" de la lista de regalos 🎁`;
 
   const subject = `💛 ¡Gracias por tu regalo, ${name}!`.replace(/[\r\n]+/g, ' ');
 
@@ -106,9 +116,18 @@ export function buildThankYouEmail(
       </table>`,
         )
         .join('')}`;
+  } else if (ownLink) {
+    giftDetails = `
+      <p style="margin:0 0 14px;font-family:${SANS};font-size:14px;line-height:1.6;color:${C.soft}">Este es el link que nos dejaste:</p>
+      ${buttonHtml(ownLink, 'Ver tu link')}
+      ${price ? `<p style="margin:6px 0 0;font-family:${SANS};font-size:12px;color:${C.soft}">Precio de referencia: ${escapeHtml(price)}</p>` : ''}`;
   } else if (links.length > 0) {
     giftDetails = `
-      <p style="margin:0 0 14px;font-family:${SANS};font-size:14px;line-height:1.6;color:${C.soft}">Si todavía no lo compraste, estos son los links que elegimos. Son orientativos: podés comprarlo donde te quede más cómodo.</p>
+      <p style="margin:0 0 14px;font-family:${SANS};font-size:14px;line-height:1.6;color:${C.soft}">${
+        opcion
+          ? 'Este es el link que elegiste:'
+          : 'Si todavía no lo compraste, estos son los links que elegimos. Son orientativos: podés comprarlo donde te quede más cómodo.'
+      }</p>
       ${links.map((l) => buttonHtml(l.url, l.label)).join('')}
       ${price ? `<p style="margin:6px 0 0;font-family:${SANS};font-size:12px;color:${C.soft}">Precio de referencia: ${escapeHtml(price)}</p>` : ''}`;
   } else {
@@ -118,7 +137,9 @@ export function buildThankYouEmail(
 
   const delivery = isTransfer
     ? 'Si tenés cualquier duda, escribinos:'
-    : 'Podés traerlo el día de la fiesta o escribirnos para coordinar la entrega:';
+    : shipping
+      ? 'Antes de enviarlo, escribinos así coordinamos la dirección y los demás detalles:'
+      : '¡Te esperamos en la boda! Si tenés alguna duda, escribinos:';
 
   // Mensaje de cierre: se edita en supabase/functions/_shared/couple.json → "thankYouNote".
   // Un salto de línea (\n) en el texto arma un párrafo nuevo.
@@ -218,8 +239,14 @@ export function buildThankYouEmail(
     for (const a of accounts) {
       textLines.push(`${a.bank} (titular: ${couple.holder})`, ...accountRows(a).map(([k, v]) => `  ${k}: ${v}`), '');
     }
+  } else if (ownLink) {
+    textLines.push(`Tu link: ${ownLink}`, '');
   } else if (links.length > 0) {
-    textLines.push('Links orientativos (podés comprarlo donde quieras):', ...links.map((l) => `  ${l.label}: ${l.url}`), '');
+    textLines.push(
+      opcion ? 'El link que elegiste:' : 'Links orientativos (podés comprarlo donde quieras):',
+      ...links.map((l) => `  ${l.label}: ${l.url}`),
+      '',
+    );
   }
   textLines.push(delivery, ...contacts.map((c) => `  ${c.name}: ${c.display} · ${waLink(c.phone, waText)}`), '');
   if (note) textLines.push(note, '');

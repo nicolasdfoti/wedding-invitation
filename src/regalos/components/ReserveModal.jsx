@@ -6,9 +6,9 @@ import AccountCard from '../../components/ui/AccountCard';
 import WhatsAppButtons from './WhatsAppButtons';
 import { PriceLine } from './Registry';
 import { Honeypot, TextField } from './FormFields';
-import { validateGuest } from '../validation';
+import { normalizeLink, validateGuest } from '../validation';
 import { reserveGift } from '../api';
-import { buyLinks } from '../stores';
+import { buyLinks, storeName } from '../stores';
 import { formatPrice } from '../catalog';
 import site from '../../config/site';
 
@@ -18,7 +18,15 @@ const SERVER_ERRORS = {
   invalid_email: 'Revisá tu mail: parece que tiene un error.',
   not_found: 'Este regalo ya no está en la lista.',
   not_reservable: 'Este regalo no se puede reservar.',
+  invalid_link: 'Revisá el link: tiene que empezar con https://',
+  invalid_entrega: 'Contanos si lo llevás a la boda o si lo enviás.',
 };
+
+const DELIVERY_OPTIONS = [
+  { value: 'llevo', label: 'Lo llevo a la boda' },
+  { value: 'envio', label: 'Lo envío' },
+];
+const SHIPPING_NOTE = 'Escribinos antes de enviarlo así coordinamos la dirección y los demás detalles.';
 const GENERIC_ERROR = 'No se pudo guardar la reserva. Revisá tu conexión y probá de nuevo.';
 
 // Dónde lo va a comprar: uno por link de compra y "en otro lado".
@@ -40,6 +48,46 @@ function purchaseOptions(gift) {
       cta: 'Reservar a mi nombre',
     },
   ];
+}
+
+function RadioGroup({ legend, name, options, value, onChange, disabled }) {
+  return (
+    <fieldset>
+      <legend className="mb-2 text-sm font-semibold text-gray-700">{legend}</legend>
+      <div className="rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
+        {options.map((option) => {
+          const checked = value === option.value;
+          return (
+            <label
+              key={option.value}
+              className={`flex items-center gap-3 min-h-12 px-4 py-3 text-sm cursor-pointer transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-inset has-[:focus-visible]:ring-accent ${
+                checked ? 'bg-accent/10 text-gray-900 font-semibold' : 'text-gray-700 hover:bg-fondo'
+              }`}
+            >
+              <input
+                type="radio"
+                name={name}
+                value={option.value}
+                checked={checked}
+                onChange={onChange}
+                disabled={disabled}
+                className="w-4 h-4 accent-accent"
+              />
+              {option.label}
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}
+
+function ShippingNote() {
+  return (
+    <p role="note" className="p-4 rounded-2xl bg-gold/15 border border-gold/50 text-sm text-gray-700">
+      {SHIPPING_NOTE}
+    </p>
+  );
 }
 
 function TransferDetails({ gift }) {
@@ -111,7 +159,14 @@ const TRANSFER_CHOICE = { value: 'transferencia', forma: 'transferencia', cta: '
 function ReserveContent({ gift, gifts, mode, readOnly, onClose, onReserved, onTaken, onPick }) {
   const transfer = mode === 'transferencia';
   const options = transfer ? [TRANSFER_CHOICE] : purchaseOptions(gift);
-  const [form, setForm] = useState({ nombre: '', email: '', mensaje: '', choice: options[0].value });
+  const [form, setForm] = useState({
+    nombre: '',
+    email: '',
+    mensaje: '',
+    choice: options[0].value,
+    link: '',
+    entrega: 'llevo',
+  });
   const [honeypot, setHoneypot] = useState('');
   const [errors, setErrors] = useState({});
   const [phase, setPhase] = useState('form'); // form | submitting | success | taken
@@ -127,6 +182,8 @@ function ReserveContent({ gift, gifts, mode, readOnly, onClose, onReserved, onTa
 
   const choice = options.find((o) => o.value === form.choice) ?? options[0];
   const links = buyLinks(gift);
+  const ownStore = !transfer && choice.value === 'propia';
+  const shipping = !transfer && form.entrega === 'envio';
 
   if (readOnly && transfer) {
     return (
@@ -176,7 +233,9 @@ function ReserveContent({ gift, gifts, mode, readOnly, onClose, onReserved, onTa
 
   if (phase === 'success') {
     const firstName = form.nombre.trim().split(/\s+/)[0];
-    const otherLinks = links.filter((link) => link.key !== choice.link?.key);
+    // Sólo el link que eligió: el de la tienda de la lista o el suyo propio.
+    const ownUrl = ownStore ? normalizeLink(form.link) : '';
+    const chosenLink = choice.link ?? (ownUrl ? { url: ownUrl, store: storeName(ownUrl) ?? 'tu link' } : null);
     return (
       <div className="space-y-6">
         <div role="status" ref={topRef}>
@@ -197,29 +256,29 @@ function ReserveContent({ gift, gifts, mode, readOnly, onClose, onReserved, onTa
           </div>
         ) : (
           <div className="space-y-3">
-            {choice.link && <LinkButton link={choice.link} primary />}
-            <p className="text-sm text-gray-600">
-              {choice.link
-                ? 'Si encontrás otro modelo o tienda que te guste, también vale.'
-                : 'Comprálo donde quieras y en el modelo que te guste.'}
-            </p>
-            {otherLinks.map((link) => (
-              <LinkButton key={link.url} link={link} />
-            ))}
+            {chosenLink ? (
+              <LinkButton link={chosenLink} primary />
+            ) : (
+              <p className="text-sm text-gray-600">Comprálo donde quieras y en el modelo que te guste.</p>
+            )}
           </div>
         )}
 
         <div className="space-y-3 pt-5 border-t border-gray-100">
-          <p className="text-sm text-gray-600">
-            {choice.forma === 'transferencia'
-              ? '¿Alguna duda? Escribinos.'
-              : 'Traelo a la fiesta o escribinos para coordinar la entrega.'}
-          </p>
+          {shipping ? (
+            <ShippingNote />
+          ) : (
+            <p className="text-sm text-gray-600">
+              {transfer ? '¿Alguna duda? Escribinos.' : '¡Te esperamos en la boda con tu regalo! Si tenés alguna duda, escribinos.'}
+            </p>
+          )}
           <WhatsAppButtons
             text={
-              choice.forma === 'transferencia'
+              transfer
                 ? `Hola! Reservé "${gift.item}" de la lista de regalos y les voy a transferir el valor 🎁`
-                : `Hola! Reservé "${gift.item}" de la lista de regalos 🎁 ¿Cómo coordinamos la entrega?`
+                : shipping
+                  ? `Hola! Reservé "${gift.item}" de la lista de regalos 🎁 Lo quiero enviar, ¿me pasan la dirección?`
+                  : `Hola! Reservé "${gift.item}" de la lista de regalos 🎁`
             }
             size="sm"
           />
@@ -246,7 +305,7 @@ function ReserveContent({ gift, gifts, mode, readOnly, onClose, onReserved, onTa
       onClose();
       return;
     }
-    const validation = validateGuest(form);
+    const validation = validateGuest({ ...form, link: ownStore ? form.link : '' });
     setErrors(validation);
     if (Object.keys(validation).length > 0) return;
 
@@ -259,6 +318,9 @@ function ReserveContent({ gift, gifts, mode, readOnly, onClose, onReserved, onTa
         mensaje: form.mensaje.trim(),
         email: site.giftsPage.thankYouEmail ? form.email.trim() : '',
         forma: choice.forma,
+        entrega: transfer ? '' : form.entrega,
+        link: ownStore ? normalizeLink(form.link) : '',
+        opcion: transfer ? '' : choice.value,
       });
       if (result?.ok) {
         setPhase('success');
@@ -294,33 +356,46 @@ function ReserveContent({ gift, gifts, mode, readOnly, onClose, onReserved, onTa
       )}
 
       {!transfer && (
-        <fieldset>
-          <legend className="mb-2 text-sm font-semibold text-gray-700">¿Dónde lo vas a comprar?</legend>
-          <div className="rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
-            {options.map((option) => {
-              const checked = form.choice === option.value;
-              return (
-                <label
-                  key={option.value}
-                  className={`flex items-center gap-3 min-h-12 px-4 py-3 text-sm cursor-pointer transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-inset has-[:focus-visible]:ring-accent ${
-                    checked ? 'bg-accent/10 text-gray-900 font-semibold' : 'text-gray-700 hover:bg-fondo'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="choice"
-                    value={option.value}
-                    checked={checked}
-                    onChange={handleChange}
-                    disabled={submitting}
-                    className="w-4 h-4 accent-accent"
-                  />
-                  {option.label}
-                </label>
-              );
-            })}
-          </div>
-        </fieldset>
+        <RadioGroup
+          legend="¿Dónde lo vas a comprar?"
+          name="choice"
+          options={options}
+          value={form.choice}
+          onChange={handleChange}
+          disabled={submitting}
+        />
+      )}
+
+      {ownStore && (
+        <TextField
+          id="reserve-link"
+          name="link"
+          type="url"
+          inputMode="url"
+          label="Link de dónde lo comprás (opcional)"
+          hint="Así sabemos qué modelo elegiste."
+          placeholder="https://"
+          value={form.link}
+          onChange={handleChange}
+          error={errors.link}
+          autoComplete="url"
+          maxLength={500}
+          disabled={submitting}
+        />
+      )}
+
+      {!transfer && (
+        <div className="space-y-3">
+          <RadioGroup
+            legend="¿Cómo nos lo hacés llegar?"
+            name="entrega"
+            options={DELIVERY_OPTIONS}
+            value={form.entrega}
+            onChange={handleChange}
+            disabled={submitting}
+          />
+          {shipping && <ShippingNote />}
+        </div>
       )}
 
       <TextField

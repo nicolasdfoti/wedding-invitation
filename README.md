@@ -103,7 +103,7 @@ Usa **las mismas variables de entorno que el RSVP** (`VITE_SUPABASE_URL`, `VITE_
 
 ### Instalación en Supabase (una sola vez)
 
-1. Supabase → **SQL Editor** → pegar y ejecutar [`supabase/gifts.sql`](supabase/gifts.sql). Crea las tablas, las funciones y carga los 39 ítems del Excel. Se puede volver a correr sin romper nada (no pisa ítems que ya editaron ni borra reservas). **Cada vez que cambie este archivo, volvé a ejecutarlo completo** (por ejemplo, para sumar el mail del invitado).
+1. Supabase → **SQL Editor** → pegar y ejecutar [`supabase/gifts.sql`](supabase/gifts.sql). Crea las tablas, las funciones y carga los 39 ítems del Excel. Se puede volver a correr sin romper nada (no pisa ítems que ya editaron ni borra reservas). **Cada vez que cambie este archivo, volvé a ejecutarlo completo** (por ejemplo, para sumar el mail del invitado o la forma de entrega), y hacelo **antes** de deployar el frontend: si la web nueva llama a la función vieja, las reservas fallan.
 2. Listo: al recargar `/regalos` ya se pueden hacer reservas.
 
 ### Editar la lista (sin tocar código)
@@ -113,7 +113,7 @@ Supabase → **Table Editor** → `gift_items`. Cada fila es un regalo:
 | Columna      | Para qué                                                                  |
 | ------------ | ------------------------------------------------------------------------- |
 | `precio`     | Precio de referencia en pesos, sin puntos (ej. `189999`). Vacío = sólo se muestra el nivel. |
-| `link1/link2`| Links de compra. La tienda se detecta sola (Mercado Libre, Frávega, Garbarino…); si no, dice "Ver opción 1/2". Vacío = no aparece el botón. |
+| `link1/link2`| Links de compra. El nombre de la tienda sale del dominio: "Ver en Mercado Libre", "Ver en Arredo", etc. (las conocidas están en [`stores.js`](supabase/functions/_shared/stores.js); las demás toman el nombre del dominio). Vacío = no aparece el botón. |
 | `imagen`     | URL de una foto (opcional). Si está vacía, el regalo se muestra sin foto. |
 | `nivel`      | `$`, `$$`, `$$$` (o `libre` para el aporte libre).                        |
 | `orden`      | Orden en la lista (de menor a mayor).                                     |
@@ -124,7 +124,7 @@ Para agregar un regalo, sumá una fila con un `id` nuevo (ej. `R-040`). Para no 
 
 ### Ver quién regaló qué
 
-Table Editor → vista **`regalos_reservas`** (más nueva primero): ítem, nombre, mensaje, forma (`compra` / `transferencia`), estado (`activa` o `liberada`) y mail (si lo dejó). Para liberar una reserva a mano, en `gift_reservations` cambiá `estado` de `activa` a `liberada`.
+Table Editor → vista **`regalos_reservas`** (más nueva primero): ítem, nombre, mensaje, forma (`compra` / `transferencia`), estado (`activa` o `liberada`), mail (si lo dejó), `opcion` (dónde lo compra: `link1`/`link2` = uno de los links de la lista, `propia` = en otro lado), `entrega` (`llevo` = lo lleva a la boda, `envio` = lo envía y hay que pasarle la dirección) y `link_compra` (si eligió "Lo compro en otro lado" y dejó el link). Para liberar una reserva a mano, en `gift_reservations` cambiá `estado` de `activa` a `liberada`.
 
 ### Seguridad
 
@@ -136,8 +136,8 @@ Table Editor → vista **`regalos_reservas`** (más nueva primero): ítem, nombr
 
 Cuando alguien **reserva** o **libera** un regalo:
 
-- **A ustedes** les llega un aviso con ítem, categoría, quién lo regala, forma ("Lo compro" / "Transfiero el valor"), su mensaje, su mail y fecha/hora de Argentina. Asunto: `🎁 Nuevo regalo reservado: Microondas — de Juan Pérez`. Si le dan *Responder*, le contestan directo al invitado.
-- **Al invitado**, si dejó su mail (es opcional), le llega un **mail de agradecimiento** de parte de ustedes con el regalo y los links para comprarlo, o los datos de las cuentas si eligió transferir. Asunto: `💛 ¡Gracias por tu regalo, Juan!`. Sólo al reservar, no al liberar.
+- **A ustedes** les llega un aviso con ítem, categoría, quién lo regala, forma ("Lo compro" / "Transfiero el valor"), entrega (lo lleva a la boda o lo envía), el link si compra en otro lado, su mensaje, su mail y fecha/hora de Argentina. Asunto: `🎁 Nuevo regalo reservado: Microondas — de Juan Pérez`. Si le dan *Responder*, le contestan directo al invitado.
+- **Al invitado**, si dejó su mail (es opcional), le llega un **mail de agradecimiento** de parte de ustedes con el regalo y **sólo el link que eligió** (el de la tienda o el suyo propio), o los datos de las cuentas si eligió transferir. Si eligió enviarlo, el mail le pide que les escriba para coordinar la dirección. Asunto: `💛 ¡Gracias por tu regalo, Juan!`. Sólo al reservar, no al liberar.
 
 **Mensaje de cierre del agradecimiento:** se edita en [`supabase/functions/_shared/couple.json`](supabase/functions/_shared/couple.json), campo `"thankYouNote"` (con `\n` dentro del texto armás otro párrafo; vacío `""` = sin mensaje). Después de editarlo hay que volver a deployar la función.
 

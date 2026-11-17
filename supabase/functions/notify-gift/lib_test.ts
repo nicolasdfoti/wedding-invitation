@@ -291,3 +291,69 @@ Deno.test('handle: el secreto tolera espacios alrededor', async () => {
   const res = await handle(req(payload('INSERT', {}), '  s3cret '), deps);
   assertEquals(res.status, 200);
 });
+
+Deno.test('buildEmail: entrega por envío y link propio', () => {
+  const r = { ...base, entrega: 'envio' as const, link_compra: 'https://www.arredo.com.ar/sabanas' };
+  const email = buildEmail('reserva', r, { item: 'Sábanas', categoria: 'Dormitorio' });
+  assert(email.text.includes('Entrega: Lo envía'), email.text);
+  assert(email.text.includes('Link: https://www.arredo.com.ar/sabanas'), email.text);
+  const sinDatos = buildEmail('reserva', base, { item: 'Sábanas', categoria: 'Dormitorio' });
+  assert(!sinDatos.text.includes('Entrega:') && !sinDatos.text.includes('Link:'), sinDatos.text);
+});
+
+Deno.test('buildThankYouEmail: lo lleva a la boda', () => {
+  const email = buildThankYouEmail({ nombre: 'Ana', forma: 'compra', entrega: 'llevo' }, ITEM);
+  assert(email.html.includes('Te esperamos en la boda'), 'falta el texto de llevarlo');
+  assert(!email.html.includes('coordinamos la dirección'));
+});
+
+Deno.test('buildThankYouEmail: envío pide coordinar la dirección', () => {
+  const email = buildThankYouEmail({ nombre: 'Ana', forma: 'compra', entrega: 'envio' }, ITEM);
+  assert(email.html.includes('coordinamos la dirección'), 'falta la leyenda de envío');
+  assert(email.text.includes('coordinamos la dirección'), email.text);
+  assert(email.html.includes(encodeURIComponent('¿me pasan la dirección?')), 'el WhatsApp debería pedir la dirección');
+});
+
+Deno.test('buildThankYouEmail: link propio reemplaza a los de la lista', () => {
+  const email = buildThankYouEmail(
+    { nombre: 'Ana', forma: 'compra', entrega: 'llevo', link: 'https://www.arredo.com.ar/sabanas' },
+    ITEM,
+  );
+  assert(email.html.includes('Ver tu link'));
+  assert(email.html.includes('https://www.arredo.com.ar/sabanas'));
+  assert(!email.html.includes('Ver en Mercado Libre'));
+  assert(email.text.includes('Tu link: https://www.arredo.com.ar/sabanas'), email.text);
+});
+
+Deno.test('buyLinks: tiendas fuera de la lista usan el nombre del dominio', () => {
+  const email = buildThankYouEmail(
+    { nombre: 'Ana', forma: 'compra' },
+    { item: 'Sábanas', categoria: 'Dormitorio', link1: 'https://www.arredo.com.ar/sabanas' },
+  );
+  assert(email.html.includes('Ver en Arredo'), 'debería decir Ver en Arredo');
+  assert(!email.html.includes('Ver opción 1'));
+});
+
+Deno.test('buildThankYouEmail: sólo muestra el link de la tienda elegida', () => {
+  const email = buildThankYouEmail({ nombre: 'Ana', forma: 'compra', entrega: 'llevo', opcion: 'link2' }, ITEM);
+  assert(email.html.includes('Ver en Frávega'), 'falta la tienda elegida');
+  assert(!email.html.includes('Ver en Mercado Libre'), 'no debería mostrar otras opciones');
+  assert(email.html.includes('Este es el link que elegiste'));
+  assert(!email.html.includes('orientativos'));
+  assert(email.text.includes('Ver en Frávega: https://www.fravega.com/p/microondas-2'), email.text);
+  assert(!email.text.includes('mercadolibre'), email.text);
+});
+
+Deno.test('buildThankYouEmail: en otro lado sin link no muestra links de la lista', () => {
+  const email = buildThankYouEmail({ nombre: 'Ana', forma: 'compra', entrega: 'llevo', opcion: 'propia' }, ITEM);
+  assert(!email.html.includes('Ver en Mercado Libre') && !email.html.includes('Ver en Frávega'));
+  assert(email.html.includes('donde te quede más cómodo'));
+});
+
+Deno.test('buildEmail: dice dónde lo compra', () => {
+  const item = { item: 'Microondas', categoria: 'Cocina', link1: ITEM.link1, link2: ITEM.link2 };
+  const tienda = buildEmail('reserva', { ...base, opcion: 'link2' }, item);
+  assert(tienda.text.includes('Dónde: Frávega — https://www.fravega.com/p/microondas-2'), tienda.text);
+  const propia = buildEmail('reserva', { ...base, opcion: 'propia' }, item);
+  assert(propia.text.includes('Dónde: En otro lado'), propia.text);
+});
