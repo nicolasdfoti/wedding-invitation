@@ -62,8 +62,8 @@ export default function Details() {
                 viewport={revealViewport}
                 transition={{ delay: 0.3 + index * 0.1, duration: 0.4 }}
               >
-                <Card variant="outlined" padding="lg" className="h-full">
-                  <div className="text-center">
+                <Card variant="outlined" padding="lg" className="h-full flex flex-col">
+                  <div className="text-center flex flex-col flex-1">
                     <Icon className="mx-auto text-accent mb-4" size={42} aria-hidden="true" />
                     <h3 className="font-title text-2xl text-blue mb-2">{item.label}</h3>
                     <p className="text-accent font-semibold mb-1">
@@ -80,7 +80,7 @@ export default function Details() {
                         href={item.mapsUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center text-sm text-accent hover:text-coral transition-colors mt-2"
+                        className="mt-auto pt-2 self-center inline-flex items-center text-sm text-accent hover:text-coral transition-colors"
                         aria-label={`Ver ${item.label} en Google Maps`}
                       >
                         <MapPin className="w-4 h-4 mr-1" aria-hidden="true" />
