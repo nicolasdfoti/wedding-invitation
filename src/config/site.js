@@ -131,7 +131,7 @@ export const site = {
     title: 'Sofy & Nico - Nuestra Boda',
     description: 'Invitación de boda de Sofy y Nico. 12 de febrero de 2027, Pilar, Buenos Aires.',
     ogImage: '/assets/og-image.jpg',
-    url: 'https://wedding-invitation-inky-kappa-17.vercel.app/',
+    url: 'https://sofynico.vercel.app/',
   },
 };
 
