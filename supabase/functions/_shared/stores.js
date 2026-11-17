@@ -21,6 +21,8 @@ const STORES = [
   [/(^|\.)philips\./, 'Philips'],
   [/(^|\.)hendel\./, 'Hendel'],
   [/(^|\.)arredo\./, 'Arredo'],
+  [/(^|\.)bgh\./, 'BGH'],
+  [/(^|\.)estiloaustral\./, 'Estilo Austral'],
 ];
 
 // Terminaciones de dominio que no son el nombre de la tienda.
@@ -44,18 +46,22 @@ export function storeName(url) {
   }
 }
 
-// Links de compra de un ítem: { url, store, label } ("Ver en Frávega" / "Ver opción 2").
+// Links de compra de un ítem:
+// { key, url, store, name, option, label } → "Ver opción 2 en Frávega" (o "Ver opción 2" si no se reconoce la tienda).
 export function buyLinks(gift) {
   return [gift.link1, gift.link2]
     .map((url, index) => ({ url: (url || '').trim(), index }))
     .filter(({ url }) => /^https?:\/\//i.test(url))
     .map(({ url, index }) => {
-      const store = storeName(url);
+      const name = storeName(url);
+      const option = `opción ${index + 1}`;
       return {
         key: `link${index + 1}`,
         url,
-        store: store ?? `la opción ${index + 1}`,
-        label: store ? `Ver en ${store}` : `Ver opción ${index + 1}`,
+        name,
+        option,
+        store: name ?? `la ${option}`,
+        label: name ? `Ver ${option} en ${name}` : `Ver ${option}`,
       };
     });
 }

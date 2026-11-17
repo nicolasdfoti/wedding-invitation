@@ -113,7 +113,7 @@ Supabase → **Table Editor** → `gift_items`. Cada fila es un regalo:
 | Columna      | Para qué                                                                  |
 | ------------ | ------------------------------------------------------------------------- |
 | `precio`     | Precio de referencia en pesos, sin puntos (ej. `189999`). Vacío = sólo se muestra el nivel. |
-| `link1/link2`| Links de compra. El nombre de la tienda sale del dominio: "Ver en Mercado Libre", "Ver en Arredo", etc. (las conocidas están en [`stores.js`](supabase/functions/_shared/stores.js); las demás toman el nombre del dominio). Vacío = no aparece el botón. |
+| `link1/link2`| Links de compra. El nombre de la tienda sale del dominio: "Ver opción 1 en Mercado Libre", "Ver opción 2 en Arredo", etc.; en el popup de reserva, "Lo compro en Mercado Libre (opción 1)" (las conocidas están en [`stores.js`](supabase/functions/_shared/stores.js); las demás toman el nombre del dominio). Vacío = no aparece el botón. |
 | `imagen`     | URL de una foto (opcional). Si está vacía, el regalo se muestra sin foto. |
 | `nivel`      | `$`, `$$`, `$$$` (o `libre` para el aporte libre).                        |
 | `orden`      | Orden en la lista (de menor a mayor).                                     |

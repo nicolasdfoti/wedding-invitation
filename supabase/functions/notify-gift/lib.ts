@@ -57,8 +57,8 @@ const FORMAS: Record<string, string> = {
 function where(r: Reservation, item: GiftInfo): string | null {
   if (r.forma !== 'compra' || !r.opcion) return null;
   if (r.opcion === 'propia') return 'En otro lado';
-  const link = (buyLinks(item) as { key: string; url: string; store: string }[]).find((l) => l.key === r.opcion);
-  return link ? `${link.store} — ${link.url}` : null;
+  const link = (buyLinks(item) as { key: string; url: string; store: string; option: string }[]).find((l) => l.key === r.opcion);
+  return link ? `${link.store} (${link.option}) — ${link.url}` : null;
 }
 
 const ENTREGAS: Record<string, string> = {

@@ -184,12 +184,12 @@ Deno.test('firstName', () => {
 Deno.test('buildThankYouEmail: compra con links de tiendas', () => {
   const email = buildThankYouEmail({ nombre: 'Juan <b>Pérez</b>', forma: 'compra' }, ITEM);
   assertEquals(email.subject, '💛 ¡Gracias por tu regalo, Juan!');
-  assert(email.html.includes('Ver en Mercado Libre'), 'falta Mercado Libre');
-  assert(email.html.includes('Ver en Frávega'), 'falta Frávega');
+  assert(email.html.includes('Ver opción 1 en Mercado Libre'), 'falta Mercado Libre');
+  assert(email.html.includes('Ver opción 2 en Frávega'), 'falta Frávega');
   assert(email.html.includes('https://www.mercadolibre.com.ar/microondas/p/MLA1'));
   assert(!email.html.includes('<b>'), 'no escapó el nombre');
   assert(!email.html.includes('0170039840000034645646'), 'no debería mostrar cuentas en compra');
-  assert(email.text.includes('Ver en Frávega: https://www.fravega.com/p/microondas-2'), email.text);
+  assert(email.text.includes('Ver opción 2 en Frávega: https://www.fravega.com/p/microondas-2'), email.text);
   assert(email.html.includes('Sofy &amp; Nico'));
   assert(email.html.includes('nos vamos a acordar de vos'), 'falta el mensaje de cierre');
   assert(email.text.includes('nos vamos a acordar de vos'), 'falta el cierre en texto plano');
@@ -201,7 +201,7 @@ Deno.test('buildThankYouEmail: transferencia muestra monto y cuentas', () => {
   assert(email.html.includes('0000003100035561508263'), 'falta CVU');
   assert(email.html.includes('Titular: Nicolás Foti'));
   assert(/189\.999/.test(email.html), 'falta el precio');
-  assert(!email.html.includes('Ver en Mercado Libre'));
+  assert(!email.html.includes('Ver opción 1 en Mercado Libre'));
   assert(email.text.includes('Alias: nicolasfoti'), email.text);
 });
 
@@ -321,7 +321,7 @@ Deno.test('buildThankYouEmail: link propio reemplaza a los de la lista', () => {
   );
   assert(email.html.includes('Ver tu link'));
   assert(email.html.includes('https://www.arredo.com.ar/sabanas'));
-  assert(!email.html.includes('Ver en Mercado Libre'));
+  assert(!email.html.includes('Ver opción 1 en Mercado Libre'));
   assert(email.text.includes('Tu link: https://www.arredo.com.ar/sabanas'), email.text);
 });
 
@@ -330,30 +330,30 @@ Deno.test('buyLinks: tiendas fuera de la lista usan el nombre del dominio', () =
     { nombre: 'Ana', forma: 'compra' },
     { item: 'Sábanas', categoria: 'Dormitorio', link1: 'https://www.arredo.com.ar/sabanas' },
   );
-  assert(email.html.includes('Ver en Arredo'), 'debería decir Ver en Arredo');
-  assert(!email.html.includes('Ver opción 1'));
+  assert(email.html.includes('Ver opción 1 en Arredo'), 'debería decir Ver opción 1 en Arredo');
+  assert(!email.html.includes('Ver opción 1<'), 'no debería quedar el genérico');
 });
 
 Deno.test('buildThankYouEmail: sólo muestra el link de la tienda elegida', () => {
   const email = buildThankYouEmail({ nombre: 'Ana', forma: 'compra', entrega: 'llevo', opcion: 'link2' }, ITEM);
-  assert(email.html.includes('Ver en Frávega'), 'falta la tienda elegida');
-  assert(!email.html.includes('Ver en Mercado Libre'), 'no debería mostrar otras opciones');
+  assert(email.html.includes('Ver opción 2 en Frávega'), 'falta la tienda elegida');
+  assert(!email.html.includes('Ver opción 1 en Mercado Libre'), 'no debería mostrar otras opciones');
   assert(email.html.includes('Este es el link que elegiste'));
   assert(!email.html.includes('orientativos'));
-  assert(email.text.includes('Ver en Frávega: https://www.fravega.com/p/microondas-2'), email.text);
+  assert(email.text.includes('Ver opción 2 en Frávega: https://www.fravega.com/p/microondas-2'), email.text);
   assert(!email.text.includes('mercadolibre'), email.text);
 });
 
 Deno.test('buildThankYouEmail: en otro lado sin link no muestra links de la lista', () => {
   const email = buildThankYouEmail({ nombre: 'Ana', forma: 'compra', entrega: 'llevo', opcion: 'propia' }, ITEM);
-  assert(!email.html.includes('Ver en Mercado Libre') && !email.html.includes('Ver en Frávega'));
+  assert(!email.html.includes('Ver opción 1 en Mercado Libre') && !email.html.includes('Ver opción 2 en Frávega'));
   assert(email.html.includes('donde te quede más cómodo'));
 });
 
 Deno.test('buildEmail: dice dónde lo compra', () => {
   const item = { item: 'Microondas', categoria: 'Cocina', link1: ITEM.link1, link2: ITEM.link2 };
   const tienda = buildEmail('reserva', { ...base, opcion: 'link2' }, item);
-  assert(tienda.text.includes('Dónde: Frávega — https://www.fravega.com/p/microondas-2'), tienda.text);
+  assert(tienda.text.includes('Dónde: Frávega (opción 2) — https://www.fravega.com/p/microondas-2'), tienda.text);
   const propia = buildEmail('reserva', { ...base, opcion: 'propia' }, item);
   assert(propia.text.includes('Dónde: En otro lado'), propia.text);
 });

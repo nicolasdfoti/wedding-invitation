@@ -37,7 +37,7 @@ function purchaseOptions(gift) {
     ...links.map((link) => ({
       value: link.key,
       forma: 'compra',
-      label: `Lo compro en ${link.store}`,
+      label: link.name ? `Lo compro en ${link.name} (${link.option})` : `Lo compro en la ${link.option}`,
       cta: `Reservar e ir a ${link.store}`,
       link,
     })),
