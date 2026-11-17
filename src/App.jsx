@@ -13,7 +13,15 @@ import RSVP from './components/sections/RSVP';
 import Footer from './components/sections/Footer';
 
 export default function App() {
-  const [isOpened, setIsOpened] = useState(false);
+  // Si vuelven desde /regalos ("/#regalos"), no repetimos el sobre.
+  const [isOpened, setIsOpened] = useState(() => window.location.hash === '#regalos');
+
+  useEffect(() => {
+    if (window.location.hash !== '#regalos') return;
+    requestAnimationFrame(() => {
+      document.getElementById('regalos')?.scrollIntoView({ behavior: 'instant', block: 'start' });
+    });
+  }, []);
 
   useEffect(() => {
     document.body.style.overflow = isOpened ? '' : 'hidden';

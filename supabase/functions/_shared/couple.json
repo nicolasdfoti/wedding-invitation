@@ -1,0 +1,15 @@
+{
+  "names": "Sofy & Nico",
+  "weddingDateLabel": "12 de febrero de 2027",
+  "thankYouNote": "Gracias por pensar en nosotros y por ser parte de este comienzo. Cada vez que usemos tu regalo en nuestra casa nueva nos vamos a acordar de vos. ¡Nos vemos el 12 de febrero para celebrar juntos!",
+  "giftsUrl": "https://wedding-invitation-inky-kappa-17.vercel.app/regalos",
+  "holder": "Nicolás Foti",
+  "accounts": [
+    { "bank": "Banco BBVA", "alias": "nicolasfoti", "cbu": "0170039840000034645646" },
+    { "bank": "Mercado Pago", "alias": "nicolasdfoti", "cvu": "0000003100035561508263" }
+  ],
+  "contacts": [
+    { "name": "Nico", "phone": "5491153873620", "display": "11 5387-3620" },
+    { "name": "Sofy", "phone": "5491135943685", "display": "11 3594-3685" }
+  ]
+}

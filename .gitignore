@@ -27,3 +27,6 @@ dist-ssr
 *.sw?
 # Herramientas
 repomix-output.xml
+
+# Supabase CLI (generado por `supabase link`)
+supabase/.temp
