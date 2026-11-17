@@ -53,8 +53,9 @@ export default function Filters({ filters, onChange }) {
         </button>
       </div>
 
-      <div className="mt-3 -mx-6 px-6 flex items-center gap-2 overflow-x-auto no-scrollbar md:mx-0 md:px-0 md:flex-wrap md:overflow-visible">
-        <div className="flex gap-2" role="group" aria-label="Ambiente">
+      {/* Móvil: categorías y precio en dos filas (cada una con scroll horizontal). Desktop: una sola fila. */}
+      <div className="mt-3 flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center">
+        <div className="-mx-6 px-6 flex gap-2 overflow-x-auto no-scrollbar md:mx-0 md:px-0 md:overflow-visible md:flex-wrap" role="group" aria-label="Ambiente">
           {CATEGORIES.map(({ key }) => {
             const active = filters.category === key;
             return (
@@ -71,9 +72,9 @@ export default function Filters({ filters, onChange }) {
           })}
         </div>
 
-        <span className="shrink-0 w-px h-6 bg-gray-200 mx-1" aria-hidden="true" />
+        <span className="hidden md:block shrink-0 w-px h-6 bg-gray-200 mx-1" aria-hidden="true" />
 
-        <div className="flex gap-2" role="group" aria-label="Precio">
+        <div className="-mx-6 px-6 flex gap-2 overflow-x-auto no-scrollbar md:mx-0 md:px-0 md:overflow-visible md:flex-wrap" role="group" aria-label="Precio">
           {LEVELS.map(({ key, label }) => {
             const active = filters.levels.includes(key);
             return (
