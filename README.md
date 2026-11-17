@@ -2,7 +2,45 @@
 
 Invitación web: sobre animado → portada, cuenta regresiva, historia, detalles del evento (con "Agregar al calendario"), código de vestimenta, regalos, galería y confirmación de asistencia (RSVP). Más una segunda página, **`/regalos`**, con la lista de regalos completa y reservas.
 
-**Stack:** React 19 · Vite · Tailwind CSS 3 · framer-motion · Supabase (RSVP y reservas de regalos) · Supabase Edge Function + Resend (aviso por mail de reservas) · Google Apps Script (sincronización del RSVP a Google Sheets + aviso por mail). Deploy en Vercel.
+**Stack:** React 19 · Vite · Tailwind CSS 3 · framer-motion · Supabase (RSVP y reservas de regalos) · Supabase Edge Function + Gmail (mails de reservas, con Resend como alternativa) · Vercel (hosting + cron).
+
+## Qué tiene la invitación
+
+| Sección | Detalles |
+| --- | --- |
+| **Sobre** | Pantalla inicial con un sello de cera apoyado sobre la punta de la solapa, como si cerrara el sobre. Un halo late suavemente y un cartel dice "Tocá el sello" en celulares o "Hacé clic en el sello" en compu. Si el invitado vuelve desde `/regalos` (`/#regalos`), el sobre no se repite. |
+| **Portada y cuenta regresiva** | La fecha se formatea desde `site.wedding` con la zona horaria de Argentina. La cuenta regresiva apunta a `wedding.isoString` (12/02/2027 09:40, hora del civil). Para lectores de pantalla hay un resumen que no se anuncia cada segundo. |
+| **Cuándo y Dónde** | Una tarjeta por evento (Civil, Recepción, Sellamiento) con fecha, hora, dirección y "Ver en mapa" siempre al pie. El Sellamiento aclara que no se asegura el ingreso a la sesión, pero se los espera en los jardines del Templo. El botón **Agregar al calendario** descarga un `.ics` con los tres eventos y la duración de cada uno (`durationMinutes`). |
+| **Código de vestimenta** | Detalles más un recuadro destacado con `dressCode.notice` ("Mujeres: no vestimenta blanca"). |
+| **Regalos** | Cuentas para transferir (alias, CBU y CVU) con botón de copiar independiente por campo, y link a `/regalos`. |
+| **Galería** | Fotos en WebP con epígrafe visible también en celulares. |
+| **RSVP** | Formulario validado que guarda en Supabase. Tiene un campo trampa (*honeypot*) contra bots y se cierra solo después de `rsvp.deadline` (1/1/2027), mostrando `rsvp.closedMessage`. |
+
+**Detalles generales**
+
+- **Accesibilidad:** las animaciones respetan *reducir movimiento* del sistema (`MotionConfig reducedMotion="user"`). Hay labels y mensajes de error asociados a cada campo.
+- **Vista previa al compartir:** `index.html` tiene título, descripción y meta tags Open Graph con [`public/assets/og-image.jpg`](public/assets/og-image.jpg) (1200×630), así el link se ve bien en WhatsApp.
+- **Rendimiento:** fotos optimizadas a WebP (≤1600 px, de ~3,7 MB a ~0,75 MB). framer-motion se carga con `LazyMotion`, y Supabase con import dinámico recién al enviar. Las fuentes se cargan con `preconnect`.
+
+## Estructura
+
+```
+index.html              Página principal (meta tags / Open Graph)
+regalos/index.html      Página /regalos
+src/
+  config/site.js        Todo el contenido: textos, fechas, eventos, cuentas, fotos
+  components/sections/  Secciones de la invitación (Hero, Details, RSVP, …)
+  components/ui/        Piezas reutilizables (EnvelopeReveal, Card, Button, Modal, CopyRow, …)
+  regalos/              App de la lista de regalos
+  lib/                  Supabase, animaciones, portapapeles, WhatsApp
+  utils/                Fechas (formato, cuenta regresiva, .ics) y validación del RSVP
+supabase/
+  schema.sql            Tabla rsvp + RLS
+  gifts.sql             Tablas y funciones de la lista de regalos
+  functions/notify-gift Edge Function de mails
+api/keepalive.js        Cron de Vercel para que Supabase no se pause
+public/assets/          Fotos (WebP) e imagen para compartir
+```
 
 ## Desarrollo
 
@@ -36,48 +74,24 @@ Todo el texto, fechas, direcciones, cuentas y fotos se editan en [`src/config/si
 
 El esquema y las políticas de seguridad (RLS) están en [`supabase/schema.sql`](supabase/schema.sql). La anon key es pública, así que la tabla `rsvp` sólo debe permitir **INSERT** para `anon` (nada de SELECT/UPDATE/DELETE).
 
-## Google Apps Script: RSVP → Google Sheets + mail
+### Ver y administrar las confirmaciones
 
-[`rsvp-apps-script.gs`](rsvp-apps-script.gs) recibe cada confirmación nueva de Supabase, agrega una fila en la planilla de RSVP y manda un mail de aviso. Corre gratis en Google y no necesita servidor.
+Las respuestas se ven en Supabase → **Table Editor** → `rsvp`. Los invitados no pueden leer esa tabla, sólo ustedes desde el panel.
 
-Flujo: **Supabase Database Webhook** (INSERT en `rsvp`) → **Apps Script (Web App `/exec`)** → fila en la planilla + mail.
+**Volver el ID a 1** (por ejemplo, para borrar las pruebas antes de mandar las invitaciones), en el **SQL Editor**:
 
-### ¿Es visible?
+```sql
+-- Borra TODAS las confirmaciones y reinicia el contador: la próxima tendrá id = 1.
+truncate table public.rsvp restart identity;
+```
 
-- **En el sitio, no.** Vite sólo publica `public/` y lo que importa el código. El `.gs` no entra en el build y los invitados no lo pueden ver.
-- **En GitHub, sí.** El repo es público, así que el archivo **no contiene secretos**. El `SECRET` y los mails de aviso se guardan en las *Propiedades del script* de Google, que sólo ve tu cuenta. El ID de la planilla sí está en el código, pero sin permisos sobre la hoja no sirve de nada: la planilla tiene que estar compartida **sólo** con ustedes.
+Si la tabla ya está vacía y sólo querés reiniciar el contador:
 
-### Instalación
+```sql
+alter table public.rsvp alter column id restart with 1;
+```
 
-1. **Encabezados:** la fila 1 de la primera hoja tiene que tener
-   `ID | Nombre | Personas | Asistencia | Restricciones | Mensaje | Fecha | Mesa`
-   La columna *Mesa* queda vacía para completarla a mano.
-2. **Pegar el script:** en la planilla, *Extensiones → Apps Script*, pegar el contenido de `rsvp-apps-script.gs`.
-3. **Propiedades del script:** en *Configuración del proyecto (⚙️) → Propiedades del script*, agregar:
-
-   | Propiedad  | Valor                                                     |
-   | ---------- | --------------------------------------------------------- |
-   | `SECRET`   | Texto largo y aleatorio (por ejemplo, de un gestor de contraseñas) |
-   | `AVISAR_A` | Mails que reciben el aviso, separados por coma            |
-
-   Si falta `SECRET`, el script rechaza todos los pedidos. Si falta `AVISAR_A`, guarda la fila pero no manda mail.
-4. **Publicar:** *Implementar → Nueva implementación → Aplicación web*, con *Ejecutar como: Yo* y *Quién tiene acceso: Cualquier persona*. Autorizar con tu cuenta. Si aparece "Google no verificó esta app", ir a *Configuración avanzada → Ir a…*: es tu propio script. Copiar la URL que termina en `/exec`.
-5. **Webhook en Supabase:** *Database → Webhooks → Create a new hook*:
-   - Tabla: `public.rsvp` · Eventos: **Insert**
-   - Tipo: *HTTP Request* · Método: `POST`
-   - URL: `https://script.google.com/macros/s/…/exec?secret=<tu SECRET>`
-
-   Apps Script no lee headers, por eso el secreto va en la URL. Esa URL queda guardada sólo en Supabase: no la pegues en el código ni en el repo. En los logs de Supabase vas a ver un `302`: es normal, la fila igual se guarda.
-6. **Probar:** enviar un RSVP desde la web (o insertar una fila en `rsvp`) y verificar la planilla y el mail. Los errores se ven en Apps Script → *Ejecuciones*.
-
-### Actualizar el script
-
-Después de editar el código: *Implementar → Gestionar implementaciones → ✏️ → Versión: Nueva*. Así la URL `/exec` sigue siendo la misma y no hay que tocar el webhook.
-
-### Seguridad
-
-- El script antepone `'` a los textos que empiezan con `=`, `+`, `-` o `@`, para que un invitado no pueda inyectar fórmulas en la planilla.
-- Si alguna vez el `SECRET` termina en un lugar público, cambialo en las Propiedades del script y en la URL del webhook de Supabase.
+> ⚠️ No reinicies el contador si quedan filas: cuando llegue a un id existente, el insert falla y el invitado ve un error.
 
 ## Lista de regalos (`/regalos`)
 
