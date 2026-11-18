@@ -72,3 +72,16 @@ export function downloadICS(events, filename = 'boda-sofy-nico.ics') {
   document.body.removeChild(link);
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
+// Link para abrir Google Calendar con el evento ya cargado (un evento por link).
+export function googleCalendarUrl({ title, description, location, startDate, endDate }, timeZone) {
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: title,
+    dates: `${formatICSDate(startDate)}/${formatICSDate(endDate)}`,
+    details: description ?? '',
+    location: location ?? '',
+  });
+  if (timeZone) params.set('ctz', timeZone);
+  return `https://calendar.google.com/calendar/render?${params}`;
+}

@@ -1,7 +1,7 @@
 import { Calendar, CalendarPlus, Clock, MapPin } from 'lucide-react';
 import { m } from 'framer-motion';
 import { fadeUp, revealViewport } from '../../lib/motion';
-import { downloadICS } from '../../utils/date';
+import { downloadICS, googleCalendarUrl } from '../../utils/date';
 import Container from '../ui/Container';
 import SectionTitle from '../ui/SectionTitle';
 import Card from '../ui/Card';
@@ -27,21 +27,24 @@ function eventStart(time) {
 // "2027-02-12" → "12/02/2027"
 const weddingDate = site.wedding.date.split('-').reverse().join('/');
 
-function handleAddToCalendar() {
-  const events = eventItems.map((event) => {
-    const start = eventStart(event.time);
-    const end = new Date(start.getTime() + (event.durationMinutes ?? 60) * 60 * 1000);
-    return {
-      uid: `${site.wedding.date}-${event.key}@sofyynico`,
-      title: `${event.label} · Boda ${site.couple.names}`,
-      description: `${event.label} de la boda de ${site.couple.names}.\n${site.seo.url}`,
-      location: event.address,
-      startDate: start,
-      endDate: end,
-    };
-  });
-  downloadICS(events);
+// Datos de un evento para el calendario (los usan el .ics y Google Calendar).
+function calendarEvent(event) {
+  const start = eventStart(event.time);
+  return {
+    uid: `${site.wedding.date}-${event.key}@sofyynico`,
+    title: `${event.label} · Boda ${site.couple.names}`,
+    description: `${event.label} de la boda de ${site.couple.names}.\n${site.seo.url}`,
+    location: event.address,
+    startDate: start,
+    endDate: new Date(start.getTime() + (event.durationMinutes ?? 60) * 60 * 1000),
+  };
 }
+
+function handleAddToCalendar() {
+  downloadICS(eventItems.map(calendarEvent));
+}
+
+const cardLink = 'inline-flex items-center whitespace-nowrap text-sm text-accent hover:text-coral transition-colors';
 
 export default function Details() {
   return (
@@ -75,18 +78,30 @@ export default function Details() {
                     {item.description && (
                       <p className="text-sm text-gray-500 italic mb-4">{item.description}</p>
                     )}
-                    {item.mapsUrl && (
+                    <div className="mt-auto pt-2 flex flex-col items-center gap-2">
+                      {item.mapsUrl && (
+                        <a
+                          href={item.mapsUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={cardLink}
+                          aria-label={`Ver ${item.label} en Google Maps`}
+                        >
+                          <MapPin className="w-4 h-4 mr-1" aria-hidden="true" />
+                          Ver en mapa
+                        </a>
+                      )}
                       <a
-                        href={item.mapsUrl}
+                        href={googleCalendarUrl(calendarEvent(item), site.wedding.timezone)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-auto pt-2 self-center inline-flex items-center text-sm text-accent hover:text-coral transition-colors"
-                        aria-label={`Ver ${item.label} en Google Maps`}
+                        className={cardLink}
+                        aria-label={`Agregar ${item.label} a Google Calendar (se abre en otra pestaña)`}
                       >
-                        <MapPin className="w-4 h-4 mr-1" aria-hidden="true" />
-                        Ver en mapa
+                        <CalendarPlus className="w-4 h-4 mr-1" aria-hidden="true" />
+                        Agendar en Google
                       </a>
-                    )}
+                    </div>
                   </div>
                 </Card>
               </m.article>
@@ -97,8 +112,9 @@ export default function Details() {
         <m.div {...fadeUp} transition={{ delay: 0.4, duration: 0.5 }} className="mt-10 text-center">
           <Button variant="secondary" size="md" onClick={handleAddToCalendar}>
             <CalendarPlus className="w-4 h-4 mr-2" aria-hidden="true" />
-            Agregar al calendario
+            Agregar todo a Apple / Outlook
           </Button>
+          <p className="mt-2 text-xs text-gray-500">Descarga un archivo con los 3 eventos.</p>
         </m.div>
       </Container>
     </section>
